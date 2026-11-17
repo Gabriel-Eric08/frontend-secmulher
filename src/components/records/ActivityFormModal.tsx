@@ -1,13 +1,22 @@
 import { useState, type FormEvent } from 'react'
+import clsx from 'clsx'
 import type { ManualActivityType, RecordKind, UUID } from '@/api'
+import { ACTIVITY_ICONS, MANUAL_STYLE } from './Timeline'
 import { ApiError } from '@/api'
 import { useAuth } from '@/auth/AuthContext'
 import { useAddActivity } from '@/queries/records'
 import { ACTIVITY_LABEL, MANUAL_ACTIVITY_TYPES, nowLocalInput } from '@/lib/format'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
-import { Field, Input, Select, Textarea } from '@/components/ui/Form'
+import { Field, Input, Textarea } from '@/components/ui/Form'
 import { useToast } from '@/components/ui/Toast'
+
+const TYPE_HINT: Record<ManualActivityType, string> = {
+  TRIAGE: 'Primeira escuta e avaliação da demanda',
+  SERVICE: 'Atendimento realizado pela equipe',
+  FOLLOW_UP: 'Retorno, visita ou contato de acompanhamento',
+  NOTE: 'Observação interna sobre o caso',
+}
 
 export function ActivityFormModal({
   open,
@@ -61,7 +70,7 @@ export function ActivityFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title="Registrar atendimento"
+      title="Novo registro na linha do tempo"
       description="O registro fica permanente na linha do tempo e não pode ser editado."
       footer={
         <>
@@ -75,15 +84,42 @@ export function ActivityFormModal({
       }
     >
       <form id="activity-form" onSubmit={submit} className="space-y-4">
-        <Field label="Tipo" htmlFor="act-type" required>
-          <Select id="act-type" value={actionType} onChange={(e) => setActionType(e.target.value as ManualActivityType)}>
-            {MANUAL_ACTIVITY_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {ACTIVITY_LABEL[t]}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        <fieldset>
+          <legend className="label">
+            Tipo de registro <span className="text-red-600">*</span>
+          </legend>
+          <div className="grid grid-cols-2 gap-2">
+            {MANUAL_ACTIVITY_TYPES.map((t) => {
+              const Icon = ACTIVITY_ICONS[t]
+              const active = actionType === t
+              return (
+                <label
+                  key={t}
+                  className={clsx(
+                    'flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 transition-colors',
+                    active ? 'border-brand-600 bg-brand-50/60 ring-1 ring-brand-600' : 'border-ink-200 hover:border-ink-300',
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="act-type"
+                    value={t}
+                    checked={active}
+                    onChange={() => setActionType(t)}
+                    className="sr-only"
+                  />
+                  <span className={clsx('flex size-7 shrink-0 items-center justify-center rounded-full', MANUAL_STYLE[t].icon)}>
+                    <Icon className="size-3.5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-ink-900">{ACTIVITY_LABEL[t]}</span>
+                    <span className="block text-xs leading-snug text-ink-500">{TYPE_HINT[t]}</span>
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+        </fieldset>
         <Field label="Descrição" htmlFor="act-desc" required error={errors.description}>
           <Textarea
             id="act-desc"

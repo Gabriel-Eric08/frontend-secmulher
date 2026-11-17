@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronDown, Filter, Plus } from 'lucide-react'
+import { Plus, SlidersHorizontal } from 'lucide-react'
 import type { SearchRequest } from '@/api'
 import { useAuth } from '@/auth/AuthContext'
 import { useCategory, useFields } from '@/queries/admin'
@@ -8,12 +8,12 @@ import { useEntitySearch } from '@/queries/records'
 import { formatDate, formatValue, normalize } from '@/lib/format'
 import { PageHeader } from '@/components/ui/Layout'
 import { HiddenValue } from '@/components/ui/Badge'
-import { Button, ButtonLink } from '@/components/ui/Button'
+import { ButtonLink } from '@/components/ui/Button'
 import { SearchInput } from '@/components/ui/Form'
 import { Alert, EmptyState, ErrorState, ForbiddenState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { LoadingBlock, Spinner } from '@/components/ui/Spinner'
 import { DynamicValue } from '@/components/dynamic/DynamicField'
-import { FilterBuilder } from '@/components/dynamic/FilterBuilder'
+import { QuickFilters } from '@/components/dynamic/QuickFilters'
 
 const MAX_COLUMNS = 6
 
@@ -24,8 +24,11 @@ export function CadastroListPage() {
   const access = accessFor(categoryId!)
   const category = useCategory(categoryId)
   const fields = useFields(categoryId, access.canRead)
-  const [criteria, setCriteria] = useState<Pick<SearchRequest, 'filters' | 'sort'>>({})
-  const [showFilters, setShowFilters] = useState(false)
+  // mesmo valor inicial que o QuickFilters emite, para não repetir a primeira busca
+  const [criteria, setCriteria] = useState<Pick<SearchRequest, 'filters' | 'sort'>>({
+    filters: [],
+    sort: { field: 'createdAt', direction: 'desc' },
+  })
   const [q, setQ] = useState('')
 
   const request = useMemo<SearchRequest | null>(
@@ -74,6 +77,17 @@ export function CadastroListPage() {
       )}
 
       <div className="card">
+        {fields.data && fields.data.length > 0 && (
+          <div className="border-b border-ink-200 bg-ink-50/60 px-4 pt-4 pb-3">
+            <div className="mb-3 flex items-center gap-2">
+              <SlidersHorizontal className="size-4 text-brand-700" />
+              <h2 className="text-sm font-semibold text-ink-900">Filtros</h2>
+              {search.isFetching && <Spinner className="size-3.5" />}
+            </div>
+            <QuickFilters fields={fields.data} access={access} onChange={setCriteria} />
+          </div>
+        )}
+
         <div className="flex flex-col gap-3 border-b border-ink-100 p-4 sm:flex-row sm:items-center">
           <SearchInput
             placeholder="Buscar nos resultados"
@@ -81,23 +95,10 @@ export function CadastroListPage() {
             onChange={(e) => setQ(e.target.value)}
             className="sm:max-w-sm sm:flex-1"
           />
-          <Button
-            variant={showFilters || activeFilters ? 'secondary' : 'ghost'}
-            size="sm"
-            icon={<Filter className="size-4" />}
-            onClick={() => setShowFilters((v) => !v)}
-          >
-            Filtros{activeFilters ? ` (${activeFilters})` : ''}
-            <ChevronDown className={`size-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-          </Button>
-          <p className="text-xs text-ink-500 sm:ml-auto">{search.data ? `${rows.length} registro(s)` : ''}</p>
+          <p className="text-xs text-ink-500 sm:ml-auto">
+            {search.data ? `${rows.length} registro(s)${activeFilters ? ` · ${activeFilters} filtro(s) ativo(s)` : ''}` : ''}
+          </p>
         </div>
-
-        {showFilters && fields.data && (
-          <div className="border-b border-ink-100 bg-ink-50/40 p-4">
-            <FilterBuilder fields={fields.data} access={access} onApply={setCriteria} />
-          </div>
-        )}
 
         {search.isPending || fields.isPending ? (
           <LoadingBlock />

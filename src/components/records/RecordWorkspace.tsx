@@ -40,7 +40,7 @@ export function RecordWorkspace({
         />
         {tab === 'timeline' && access.canUpdate && (
           <Button size="sm" className="mb-2" icon={<Plus className="size-4" />} onClick={() => setAdding(true)}>
-            Registrar atendimento
+            Novo registro
           </Button>
         )}
       </div>

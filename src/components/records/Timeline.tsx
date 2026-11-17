@@ -1,6 +1,8 @@
+import { useMemo, useState } from 'react'
 import clsx from 'clsx'
 import {
   ArrowRight,
+  ChevronDown,
   ClipboardList,
   Download,
   EyeOff,
@@ -10,16 +12,18 @@ import {
   HeartHandshake,
   PencilLine,
   Plus,
+  Repeat,
   StickyNote,
   Trash2,
-  Repeat,
+  UserRound,
 } from 'lucide-react'
-import type { Activity, ActivityChange, ActivityType } from '@/api'
-import { ACTIVITY_LABEL, formatDateTime, formatValue } from '@/lib/format'
-import { Badge } from '@/components/ui/Badge'
+import type { Activity, ActivityChange, ActivityType, ManualActivityType } from '@/api'
+import { ACTIVITY_LABEL, MANUAL_ACTIVITY_TYPES, formatValue } from '@/lib/format'
 import { EmptyState } from '@/components/ui/States'
 
-const ICONS: Record<ActivityType, React.ComponentType<{ className?: string }>> = {
+type IconType = React.ComponentType<{ className?: string }>
+
+const ICONS: Record<ActivityType, IconType> = {
   TRIAGE: ClipboardList,
   SERVICE: HeartHandshake,
   FOLLOW_UP: Repeat,
@@ -33,33 +37,194 @@ const ICONS: Record<ActivityType, React.ComponentType<{ className?: string }>> =
   FILE_DOWNLOADED: Download,
 }
 
-const MANUAL = new Set<ActivityType>(['TRIAGE', 'SERVICE', 'FOLLOW_UP', 'NOTE'])
+/** Cor de destaque de cada tipo manual (acento lateral, ícone e etiqueta). */
+export const MANUAL_STYLE: Record<ManualActivityType, { accent: string; icon: string; chip: string }> = {
+  TRIAGE: { accent: 'border-l-brand-600', icon: 'bg-brand-700 text-white', chip: 'bg-brand-50 text-brand-800 ring-brand-200' },
+  SERVICE: { accent: 'border-l-emerald-500', icon: 'bg-emerald-600 text-white', chip: 'bg-emerald-50 text-emerald-800 ring-emerald-200' },
+  FOLLOW_UP: { accent: 'border-l-sky-500', icon: 'bg-sky-600 text-white', chip: 'bg-sky-50 text-sky-800 ring-sky-200' },
+  NOTE: { accent: 'border-l-ink-400', icon: 'bg-ink-600 text-white', chip: 'bg-ink-100 text-ink-700 ring-ink-200' },
+}
+
+export const ACTIVITY_ICONS = ICONS
+
+const MANUAL = new Set<ActivityType>(MANUAL_ACTIVITY_TYPES)
+const isManual = (t: ActivityType): t is ManualActivityType => MANUAL.has(t)
+
+type View = 'all' | 'manual' | 'system'
+
+// ---------------------------------------------------------------- datas
+
+const when = (a: Activity) => new Date(a.occurredAt ?? a.createdAt)
+
+function dayKey(d: Date) {
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+}
+
+function dayLabel(d: Date) {
+  const today = new Date()
+  const yesterday = new Date()
+  yesterday.setDate(today.getDate() - 1)
+  if (dayKey(d) === dayKey(today)) return 'Hoje'
+  if (dayKey(d) === dayKey(yesterday)) return 'Ontem'
+  const label = d.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric',
+  })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
+const timeOf = (d: Date) => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+
+// ---------------------------------------------------------------- alterações
 
 function isChange(v: unknown): v is ActivityChange {
   return !!v && typeof v === 'object' && ('antigo' in v || 'novo' in v)
 }
 
 function Changes({ changes, labelFor }: { changes: Activity['changes']; labelFor: (key: string) => string }) {
-  if (!changes || typeof changes !== 'object') return null
-  const entries = Object.entries(changes)
+  const entries = changes && typeof changes === 'object' ? Object.entries(changes) : []
   if (entries.length === 0) return null
   return (
-    <ul className="mt-2 space-y-1 rounded-md bg-ink-50 px-3 py-2 text-xs">
+    <dl className="mt-2 divide-y divide-ink-100 rounded-md border border-ink-200 bg-white text-xs">
       {entries.map(([key, v]) => (
-        <li key={key} className="flex flex-wrap items-center gap-1.5 text-ink-600">
-          <span className="font-medium text-ink-700">{labelFor(key)}:</span>
-          {isChange(v) ? (
-            <>
-              <span className="text-ink-500 line-through decoration-ink-300">{formatValue(v.antigo)}</span>
-              <ArrowRight className="size-3 text-ink-400" />
-              <span className="text-ink-800">{formatValue(v.novo)}</span>
-            </>
-          ) : (
-            <span>{formatValue(v)}</span>
-          )}
-        </li>
+        <div key={key} className="grid grid-cols-[minmax(0,9rem)_1fr] gap-3 px-3 py-1.5">
+          <dt className="truncate font-medium text-ink-600">{labelFor(key)}</dt>
+          <dd className="flex min-w-0 flex-wrap items-center gap-1.5">
+            {isChange(v) ? (
+              <>
+                <span className="text-ink-400 line-through decoration-ink-300">{formatValue(v.antigo)}</span>
+                <ArrowRight className="size-3 shrink-0 text-ink-400" />
+                <span className="font-medium text-ink-800">{formatValue(v.novo)}</span>
+              </>
+            ) : (
+              <span className="text-ink-700">{formatValue(v)}</span>
+            )}
+          </dd>
+        </div>
       ))}
-    </ul>
+    </dl>
+  )
+}
+
+function RedactedNote() {
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[11px] text-ink-400"
+      title="Parte do conteúdo foi ocultada para o seu perfil"
+    >
+      <EyeOff className="size-3" /> conteúdo ocultado
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------- itens
+
+function ManualEntry({ a }: { a: Activity & { actionType: ManualActivityType } }) {
+  const style = MANUAL_STYLE[a.actionType]
+  const Icon = ICONS[a.actionType]
+  const d = when(a)
+  return (
+    <li className="relative flex gap-3 pl-0.5">
+      <span className={clsx('relative z-10 mt-3 flex size-8 shrink-0 items-center justify-center rounded-full ring-4 ring-white', style.icon)}>
+        <Icon className="size-4" />
+      </span>
+      <article className={clsx('min-w-0 flex-1 rounded-lg border border-l-4 border-ink-200 bg-white px-4 py-3 shadow-xs', style.accent)}>
+        <header className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className={clsx('rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset', style.chip)}>
+            {ACTIVITY_LABEL[a.actionType]}
+          </span>
+          <time className="text-xs font-medium text-ink-500 tabular-nums" dateTime={a.occurredAt ?? a.createdAt}>
+            {timeOf(d)}
+          </time>
+          {a.redacted && <RedactedNote />}
+        </header>
+        {a.description && <p className="mt-2 text-sm leading-relaxed whitespace-pre-line text-ink-800">{a.description}</p>}
+        {(a.responsibleEmployee || a.userName) && (
+          <footer className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-ink-100 pt-2 text-xs text-ink-500">
+            {a.responsibleEmployee && (
+              <span className="inline-flex items-center gap-1">
+                <UserRound className="size-3" /> {a.responsibleEmployee}
+              </span>
+            )}
+            {a.userName && a.userName !== a.responsibleEmployee && <span>registrado por {a.userName}</span>}
+          </footer>
+        )}
+      </article>
+    </li>
+  )
+}
+
+function SystemEntry({ a, labelFor }: { a: Activity; labelFor: (key: string) => string }) {
+  const [open, setOpen] = useState(false)
+  const Icon = ICONS[a.actionType] ?? StickyNote
+  const d = when(a)
+  const changeCount = a.changes && typeof a.changes === 'object' ? Object.keys(a.changes).length : 0
+  const expandable = a.actionType === 'UPDATED' && changeCount > 0
+
+  return (
+    <li className="relative flex gap-3 pl-0.5">
+      <span className="relative z-10 mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-500 ring-4 ring-white">
+        <Icon className="size-3.5" />
+      </span>
+      <div className="min-w-0 flex-1 py-1.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
+          <span className="font-medium text-ink-700">{ACTIVITY_LABEL[a.actionType] ?? a.actionType}</span>
+          {a.description && a.actionType !== 'UPDATED' && (
+            <span className="truncate text-ink-500">· {a.description}</span>
+          )}
+          {expandable && (
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="inline-flex items-center gap-0.5 text-xs font-medium text-brand-700 hover:underline"
+              aria-expanded={open}
+            >
+              {changeCount} {changeCount === 1 ? 'campo' : 'campos'}
+              <ChevronDown className={clsx('size-3 transition-transform', open && 'rotate-180')} />
+            </button>
+          )}
+          {a.redacted && <RedactedNote />}
+        </div>
+        <p className="text-xs text-ink-400">
+          {timeOf(d)}
+          {a.userName && ` · ${a.userName}`}
+        </p>
+        {expandable && open && <Changes changes={a.changes} labelFor={labelFor} />}
+      </div>
+    </li>
+  )
+}
+
+// ---------------------------------------------------------------- linha do tempo
+
+function Segmented({
+  value,
+  onChange,
+  options,
+}: {
+  value: View
+  onChange: (v: View) => void
+  options: { value: View; label: string; count: number }[]
+}) {
+  return (
+    <div className="inline-flex rounded-md border border-ink-200 bg-ink-50 p-0.5" role="radiogroup">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          role="radio"
+          aria-checked={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={clsx(
+            'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors',
+            value === o.value ? 'bg-white text-ink-900 shadow-xs' : 'text-ink-500 hover:text-ink-800',
+          )}
+        >
+          {o.label}
+          <span className="text-ink-400 tabular-nums">{o.count}</span>
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -70,55 +235,114 @@ export function Timeline({
   activities: Activity[]
   labelFor?: (key: string) => string
 }) {
+  const [view, setView] = useState<View>('all')
+  const [types, setTypes] = useState<Set<ManualActivityType>>(new Set())
+
+  const manualCount = activities.filter((a) => isManual(a.actionType)).length
+
+  const groups = useMemo(() => {
+    const filtered = activities
+      .filter((a) => {
+        const manual = isManual(a.actionType)
+        if (view === 'manual' && !manual) return false
+        if (view === 'system' && manual) return false
+        if (types.size > 0 && manual && !types.has(a.actionType as ManualActivityType)) return false
+        if (types.size > 0 && !manual) return false
+        return true
+      })
+      .sort((a, b) => when(b).getTime() - when(a).getTime())
+
+    const out: { key: string; label: string; items: Activity[] }[] = []
+    for (const a of filtered) {
+      const d = when(a)
+      const key = dayKey(d)
+      const last = out[out.length - 1]
+      if (last?.key === key) last.items.push(a)
+      else out.push({ key, label: dayLabel(d), items: [a] })
+    }
+    return out
+  }, [activities, view, types])
+
   if (activities.length === 0) {
-    return <EmptyState title="Nenhum registro na linha do tempo" description="Atendimentos e alterações aparecerão aqui." />
+    return (
+      <EmptyState
+        title="Nenhum registro na linha do tempo"
+        description="Atendimentos e alterações do cadastro aparecerão aqui."
+      />
+    )
   }
 
-  const sorted = [...activities].sort(
-    (a, b) =>
-      new Date(b.occurredAt ?? b.createdAt ?? 0).getTime() - new Date(a.occurredAt ?? a.createdAt ?? 0).getTime(),
-  )
+  const toggleType = (t: ManualActivityType) =>
+    setTypes((s) => {
+      const n = new Set(s)
+      if (n.has(t)) n.delete(t)
+      else n.add(t)
+      return n
+    })
 
   return (
-    <ol className="relative">
-      {sorted.map((a, i) => {
-        const Icon = ICONS[a.actionType] ?? StickyNote
-        const manual = MANUAL.has(a.actionType)
-        return (
-          <li key={a.id} className="relative flex gap-4 pb-6 last:pb-0">
-            {i < sorted.length - 1 && <span className="absolute top-9 bottom-0 left-[17px] w-px bg-ink-200" aria-hidden />}
-            <span
-              className={clsx(
-                'relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full ring-4 ring-white',
-                manual ? 'bg-brand-700 text-white' : 'bg-ink-100 text-ink-500',
-              )}
-            >
-              <Icon className="size-4" />
-            </span>
-            <div className="min-w-0 flex-1 pt-1">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <p className={clsx('text-sm font-medium', manual ? 'text-ink-900' : 'text-ink-700')}>
-                  {ACTIVITY_LABEL[a.actionType] ?? a.actionType}
-                </p>
-                {a.redacted && (
-                  <Badge icon={<EyeOff className="size-3" />} title="Parte do conteúdo foi ocultada para o seu perfil">
-                    conteúdo ocultado
-                  </Badge>
+    <div>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Segmented
+          value={view}
+          onChange={(v) => {
+            setView(v)
+            if (v === 'system') setTypes(new Set())
+          }}
+          options={[
+            { value: 'all', label: 'Tudo', count: activities.length },
+            { value: 'manual', label: 'Atendimentos', count: manualCount },
+            { value: 'system', label: 'Sistema', count: activities.length - manualCount },
+          ]}
+        />
+        {view !== 'system' && (
+          <div className="flex flex-wrap gap-1.5">
+            {MANUAL_ACTIVITY_TYPES.map((t) => {
+              const active = types.has(t)
+              return (
+                <button
+                  key={t}
+                  onClick={() => toggleType(t)}
+                  aria-pressed={active}
+                  className={clsx(
+                    'rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset transition-colors',
+                    active ? MANUAL_STYLE[t].chip : 'text-ink-500 ring-ink-200 hover:text-ink-800',
+                  )}
+                >
+                  {ACTIVITY_LABEL[t]}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {groups.length === 0 ? (
+        <EmptyState title="Nenhum registro com esses filtros" />
+      ) : (
+        <div className="space-y-6">
+          {groups.map((g) => (
+            <section key={g.key}>
+              <h3 className="mb-3 flex items-center gap-3 text-xs font-semibold tracking-wide text-ink-500 uppercase">
+                {g.label}
+                <span className="h-px flex-1 bg-ink-200" />
+                <span className="font-normal normal-case tracking-normal text-ink-400">
+                  {g.items.length} {g.items.length === 1 ? 'registro' : 'registros'}
+                </span>
+              </h3>
+              <ol className="relative space-y-3 before:absolute before:top-2 before:bottom-2 before:left-[18px] before:w-px before:bg-ink-200">
+                {g.items.map((a) =>
+                  isManual(a.actionType) ? (
+                    <ManualEntry key={a.id} a={a as Activity & { actionType: ManualActivityType }} />
+                  ) : (
+                    <SystemEntry key={a.id} a={a} labelFor={labelFor} />
+                  ),
                 )}
-                <span className="text-xs text-ink-500">{formatDateTime(a.occurredAt ?? a.createdAt)}</span>
-              </div>
-              {a.description && <p className="mt-1 text-sm whitespace-pre-line text-ink-700">{a.description}</p>}
-              <Changes changes={a.changes} labelFor={labelFor} />
-              {(a.responsibleEmployee || a.userName) && (
-                <p className="mt-1.5 text-xs text-ink-500">
-                  {a.responsibleEmployee ? `Responsável: ${a.responsibleEmployee}` : `Por ${a.userName}`}
-                  {a.responsibleEmployee && a.userName && a.userName !== a.responsibleEmployee && ` · registrado por ${a.userName}`}
-                </p>
-              )}
-            </div>
-          </li>
-        )
-      })}
-    </ol>
+              </ol>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

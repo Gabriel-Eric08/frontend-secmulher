@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { UserPlus } from 'lucide-react'
+import { SlidersHorizontal, UserPlus, X } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { useMulheres } from '@/queries/records'
 import { ageFrom, formatDate, formatPhone, normalize } from '@/lib/format'
 import { PageHeader, Avatar } from '@/components/ui/Layout'
 import { Badge, HiddenValue } from '@/components/ui/Badge'
 import { ButtonLink } from '@/components/ui/Button'
-import { SearchInput, Select } from '@/components/ui/Form'
+import { Input, SearchInput, Select } from '@/components/ui/Form'
 import { EmptyState, ErrorState, ForbiddenState } from '@/components/ui/States'
 import { LoadingBlock } from '@/components/ui/Spinner'
 
@@ -16,7 +16,16 @@ export function MulheresListPage() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const [q, setQ] = useState('')
+  const [idade, setIdade] = useState({ min: '', max: '' })
+  const [periodo, setPeriodo] = useState({ de: '', ate: '' })
   const risco = params.get('risco') ?? ''
+
+  const setRisco = (v: string) => {
+    const next = new URLSearchParams(params)
+    if (v) next.set('risco', v)
+    else next.delete('risco')
+    setParams(next, { replace: true })
+  }
   const query = useMulheres(access.canRead)
 
   const can = {
@@ -37,8 +46,25 @@ export function MulheresListPage() {
     }
     if (risco === '1') list = list.filter((m) => m.sobRisco === true)
     if (risco === '0') list = list.filter((m) => m.sobRisco === false)
+    if (idade.min || idade.max) {
+      list = list.filter((m) => {
+        const a = ageFrom(m.dataNascimento)
+        if (a == null) return false
+        return (!idade.min || a >= Number(idade.min)) && (!idade.max || a <= Number(idade.max))
+      })
+    }
+    if (periodo.de) list = list.filter((m) => m.createdAt.slice(0, 10) >= periodo.de)
+    if (periodo.ate) list = list.filter((m) => m.createdAt.slice(0, 10) <= periodo.ate)
     return [...list].sort((a, b) => (a.nome ?? '').localeCompare(b.nome ?? '', 'pt-BR'))
-  }, [query.data, q, risco])
+  }, [query.data, q, risco, idade, periodo])
+
+  const activeFilters = [q.trim(), risco, idade.min || idade.max, periodo.de || periodo.ate].filter(Boolean).length
+  const clearFilters = () => {
+    setQ('')
+    setRisco('')
+    setIdade({ min: '', max: '' })
+    setPeriodo({ de: '', ate: '' })
+  }
 
   if (!access.canRead) return <ForbiddenState />
 
@@ -57,32 +83,61 @@ export function MulheresListPage() {
       />
 
       <div className="card">
-        <div className="flex flex-col gap-3 border-b border-ink-100 p-4 sm:flex-row sm:items-center">
-          <SearchInput
-            placeholder={can.tel ? 'Buscar por nome ou telefone' : 'Buscar por nome'}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="sm:max-w-sm sm:flex-1"
-          />
-          {can.risco && (
-            <Select
-              value={risco}
-              onChange={(e) => {
-                const next = new URLSearchParams(params)
-                if (e.target.value) next.set('risco', e.target.value)
-                else next.delete('risco')
-                setParams(next, { replace: true })
-              }}
-              className="sm:w-52"
-            >
-              <option value="">Todas as situações</option>
-              <option value="1">Em situação de risco</option>
-              <option value="0">Sem risco identificado</option>
-            </Select>
-          )}
-          <p className="text-xs text-ink-500 sm:ml-auto">
-            {query.data ? `${rows.length} de ${query.data.length}` : ''}
-          </p>
+        <div className="border-b border-ink-200 bg-ink-50/60 px-4 pt-4 pb-3">
+          <div className="mb-3 flex items-center gap-2">
+            <SlidersHorizontal className="size-4 text-brand-700" />
+            <h2 className="text-sm font-semibold text-ink-900">Filtros</h2>
+          </div>
+          <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <label htmlFor="mf-q" className="mb-1 block text-xs font-medium text-ink-600">
+                {can.tel ? 'Nome ou telefone' : 'Nome'}
+              </label>
+              <SearchInput id="mf-q" placeholder="Buscar…" value={q} onChange={(e) => setQ(e.target.value)} />
+            </div>
+            {can.risco && (
+              <div>
+                <label htmlFor="mf-risco" className="mb-1 block text-xs font-medium text-ink-600">
+                  Situação
+                </label>
+                <Select id="mf-risco" value={risco} onChange={(e) => setRisco(e.target.value)}>
+                  <option value="">Todas</option>
+                  <option value="1">Em situação de risco</option>
+                  <option value="0">Sem risco identificado</option>
+                </Select>
+              </div>
+            )}
+            {can.nasc && (
+              <div>
+                <label htmlFor="mf-idade" className="mb-1 block text-xs font-medium text-ink-600">
+                  Idade
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <Input id="mf-idade" type="number" min={0} placeholder="de" value={idade.min} onChange={(e) => setIdade((s) => ({ ...s, min: e.target.value }))} />
+                  <span className="text-xs text-ink-400">a</span>
+                  <Input type="number" min={0} placeholder="até" aria-label="Idade até" value={idade.max} onChange={(e) => setIdade((s) => ({ ...s, max: e.target.value }))} />
+                </div>
+              </div>
+            )}
+            <div>
+              <label htmlFor="mf-periodo" className="mb-1 block text-xs font-medium text-ink-600">
+                Cadastrada entre
+              </label>
+              <div className="flex items-center gap-1.5">
+                <Input id="mf-periodo" type="date" className="px-2" value={periodo.de} onChange={(e) => setPeriodo((s) => ({ ...s, de: e.target.value }))} />
+                <span className="text-xs text-ink-400">e</span>
+                <Input type="date" className="px-2" aria-label="Cadastrada até" value={periodo.ate} onChange={(e) => setPeriodo((s) => ({ ...s, ate: e.target.value }))} />
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-3 border-t border-ink-100 pt-3 text-xs text-ink-500">
+            <span>{query.data ? `${rows.length} de ${query.data.length} cadastro(s)` : ''}</span>
+            {activeFilters > 0 && (
+              <button onClick={clearFilters} className="ml-auto inline-flex items-center gap-1 font-medium text-ink-600 hover:text-ink-900">
+                <X className="size-3.5" /> Limpar {activeFilters} filtro(s)
+              </button>
+            )}
+          </div>
         </div>
 
         {query.isPending ? (
