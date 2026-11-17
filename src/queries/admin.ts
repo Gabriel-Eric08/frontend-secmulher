@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  activityTypesApi,
   categoriesApi,
   fieldsApi,
   permissionsApi,
   usersApi,
+  type ActivityTypeRequest,
   type CategoryFieldRequest,
   type CategoryRequest,
   type PermissionRequest,
@@ -102,6 +104,39 @@ export function useDeleteField(categoryId: UUID) {
   })
 }
 
+// ---------------------------------------------------------------- Tipos de registro
+
+export const useActivityTypes = (categoryId: UUID | undefined, opts: { includeInactive?: boolean; enabled?: boolean } = {}) =>
+  useQuery({
+    queryKey: qk.categories.activityTypes(categoryId!, opts.includeInactive),
+    queryFn: async () =>
+      (await activityTypesApi.list(categoryId!, opts.includeInactive)).sort((a, b) => a.position - b.position),
+    enabled: !!categoryId && (opts.enabled ?? true),
+  })
+
+export function useSaveActivityType(categoryId: UUID) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, body }: { id?: UUID; body: ActivityTypeRequest }) =>
+      id ? activityTypesApi.update(categoryId, id, body) : activityTypesApi.create(categoryId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.categories.activityTypesAll(categoryId) })
+      qc.invalidateQueries({ queryKey: qk.me })
+    },
+  })
+}
+
+export function useDeleteActivityType(categoryId: UUID) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: UUID) => activityTypesApi.remove(categoryId, id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.categories.activityTypesAll(categoryId) })
+      qc.invalidateQueries({ queryKey: qk.me })
+    },
+  })
+}
+
 // ---------------------------------------------------------------- Permissões
 
 export const usePermissions = (userId?: UUID) =>
@@ -112,7 +147,10 @@ export function useSavePermission() {
   return useMutation({
     mutationFn: ({ id, body }: { id?: UUID; body: PermissionRequest }) =>
       id ? permissionsApi.update(id, body) : permissionsApi.create(body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.permissions.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.permissions.all })
+      qc.invalidateQueries({ queryKey: qk.me })
+    },
   })
 }
 

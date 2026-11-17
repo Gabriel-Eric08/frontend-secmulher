@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ListChecks, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ListChecks, Pencil, Plus, Tags, Trash2 } from 'lucide-react'
 import { ApiError, type Category, type CategoryRequest } from '@/api'
 import { MULHERES_TABLE } from '@/auth/access'
 import { useCategories, useDeleteCategory } from '@/queries/admin'
@@ -122,10 +122,13 @@ export function CategoriasPage() {
                     <td>{c.isActive ? <Badge tone="success">Ativa</Badge> : <Badge>Inativa</Badge>}</td>
                     <td className="text-right whitespace-nowrap">
                       {c.entityType === 'dynamic' && (
-                        <Link to={`/admin/categorias/${c.id}/campos`} className={buttonClass('ghost', 'sm', 'mr-1')}>
+                        <Link to={`/admin/categorias/${c.id}/campos`} className={buttonClass('ghost', 'sm')}>
                           <ListChecks className="size-4" /> Campos
                         </Link>
                       )}
+                      <Link to={`/admin/categorias/${c.id}/tipos`} className={buttonClass('ghost', 'sm', 'mr-1')}>
+                        <Tags className="size-4" /> Tipos de registro
+                      </Link>
                       <IconButton label="Editar" onClick={() => setModal({ open: true, category: c })}>
                         <Pencil className="size-4" />
                       </IconButton>

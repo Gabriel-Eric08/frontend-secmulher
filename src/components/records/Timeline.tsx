@@ -3,31 +3,23 @@ import clsx from 'clsx'
 import {
   ArrowRight,
   ChevronDown,
-  ClipboardList,
   Download,
   EyeOff,
   FilePen,
   FilePlus2,
   FileX2,
-  HeartHandshake,
   PencilLine,
   Plus,
-  Repeat,
   StickyNote,
   Trash2,
   UserRound,
 } from 'lucide-react'
-import type { Activity, ActivityChange, ActivityType, ManualActivityType } from '@/api'
-import { ACTIVITY_LABEL, MANUAL_ACTIVITY_TYPES, formatValue } from '@/lib/format'
+import type { Activity, ActivityChange, ActivityType, ActivityTypeSummary } from '@/api'
+import { ACTIVITY_LABEL, formatValue } from '@/lib/format'
+import { activityTypeOf, isManualActivity, typeIcon, typeStyles } from '@/lib/activityTypes'
 import { EmptyState } from '@/components/ui/States'
 
-type IconType = React.ComponentType<{ className?: string }>
-
-const ICONS: Record<ActivityType, IconType> = {
-  TRIAGE: ClipboardList,
-  SERVICE: HeartHandshake,
-  FOLLOW_UP: Repeat,
-  NOTE: StickyNote,
+const SYSTEM_ICONS: Partial<Record<ActivityType, React.ComponentType<{ className?: string }>>> = {
   CREATED: Plus,
   UPDATED: PencilLine,
   DELETED: Trash2,
@@ -36,19 +28,6 @@ const ICONS: Record<ActivityType, IconType> = {
   FILE_REMOVED: FileX2,
   FILE_DOWNLOADED: Download,
 }
-
-/** Cor de destaque de cada tipo manual (acento lateral, ícone e etiqueta). */
-export const MANUAL_STYLE: Record<ManualActivityType, { accent: string; icon: string; chip: string }> = {
-  TRIAGE: { accent: 'border-l-brand-600', icon: 'bg-brand-700 text-white', chip: 'bg-brand-50 text-brand-800 ring-brand-200' },
-  SERVICE: { accent: 'border-l-emerald-500', icon: 'bg-emerald-600 text-white', chip: 'bg-emerald-50 text-emerald-800 ring-emerald-200' },
-  FOLLOW_UP: { accent: 'border-l-sky-500', icon: 'bg-sky-600 text-white', chip: 'bg-sky-50 text-sky-800 ring-sky-200' },
-  NOTE: { accent: 'border-l-ink-400', icon: 'bg-ink-600 text-white', chip: 'bg-ink-100 text-ink-700 ring-ink-200' },
-}
-
-export const ACTIVITY_ICONS = ICONS
-
-const MANUAL = new Set<ActivityType>(MANUAL_ACTIVITY_TYPES)
-const isManual = (t: ActivityType): t is ManualActivityType => MANUAL.has(t)
 
 type View = 'all' | 'manual' | 'system'
 
@@ -119,22 +98,36 @@ function RedactedNote() {
   )
 }
 
+/** Etiqueta colorida com o nome de um tipo de registro. */
+export function TypeChip({ type, className }: { type: Pick<ActivityTypeSummary, 'label' | 'color'>; className?: string }) {
+  return (
+    <span className={clsx('rounded-full px-2 py-0.5 text-xs font-semibold', className)} style={typeStyles(type).chip}>
+      {type.label}
+    </span>
+  )
+}
+
 // ---------------------------------------------------------------- itens
 
-function ManualEntry({ a }: { a: Activity & { actionType: ManualActivityType } }) {
-  const style = MANUAL_STYLE[a.actionType]
-  const Icon = ICONS[a.actionType]
+function ManualEntry({ a }: { a: Activity }) {
+  const type = activityTypeOf(a) ?? { id: '', key: '', label: ACTIVITY_LABEL.MANUAL, color: null }
+  const styles = typeStyles(type)
+  const Icon = typeIcon(type.key)
   const d = when(a)
   return (
     <li className="relative flex gap-3 pl-0.5">
-      <span className={clsx('relative z-10 mt-3 flex size-8 shrink-0 items-center justify-center rounded-full ring-4 ring-white', style.icon)}>
+      <span
+        className="relative z-10 mt-3 flex size-8 shrink-0 items-center justify-center rounded-full ring-4 ring-white"
+        style={styles.icon}
+      >
         <Icon className="size-4" />
       </span>
-      <article className={clsx('min-w-0 flex-1 rounded-lg border border-l-4 border-ink-200 bg-white px-4 py-3 shadow-xs', style.accent)}>
+      <article
+        className="min-w-0 flex-1 rounded-lg border border-l-4 border-ink-200 bg-white px-4 py-3 shadow-xs"
+        style={styles.accent}
+      >
         <header className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className={clsx('rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset', style.chip)}>
-            {ACTIVITY_LABEL[a.actionType]}
-          </span>
+          <TypeChip type={type} />
           <time className="text-xs font-medium text-ink-500 tabular-nums" dateTime={a.occurredAt ?? a.createdAt}>
             {timeOf(d)}
           </time>
@@ -158,7 +151,7 @@ function ManualEntry({ a }: { a: Activity & { actionType: ManualActivityType } }
 
 function SystemEntry({ a, labelFor }: { a: Activity; labelFor: (key: string) => string }) {
   const [open, setOpen] = useState(false)
-  const Icon = ICONS[a.actionType] ?? StickyNote
+  const Icon = SYSTEM_ICONS[a.actionType] ?? StickyNote
   const d = when(a)
   const changeCount = a.changes && typeof a.changes === 'object' ? Object.keys(a.changes).length : 0
   const expandable = a.actionType === 'UPDATED' && changeCount > 0
@@ -236,18 +229,34 @@ export function Timeline({
   labelFor?: (key: string) => string
 }) {
   const [view, setView] = useState<View>('all')
-  const [types, setTypes] = useState<Set<ManualActivityType>>(new Set())
+  /** keys dos tipos selecionados no filtro (vazio = todos) */
+  const [types, setTypes] = useState<Set<string>>(new Set())
 
-  const manualCount = activities.filter((a) => isManual(a.actionType)).length
+  const manualCount = activities.filter(isManualActivity).length
+
+  // Tipos presentes nos registros, na ordem em que aparecem pela primeira vez
+  const presentTypes = useMemo(() => {
+    const map = new Map<string, ActivityTypeSummary & { count: number }>()
+    for (const a of activities) {
+      const t = isManualActivity(a) ? activityTypeOf(a) : null
+      if (!t) continue
+      const cur = map.get(t.key)
+      if (cur) cur.count++
+      else map.set(t.key, { ...t, count: 1 })
+    }
+    return [...map.values()]
+  }, [activities])
 
   const groups = useMemo(() => {
     const filtered = activities
       .filter((a) => {
-        const manual = isManual(a.actionType)
+        const manual = isManualActivity(a)
         if (view === 'manual' && !manual) return false
         if (view === 'system' && manual) return false
-        if (types.size > 0 && manual && !types.has(a.actionType as ManualActivityType)) return false
-        if (types.size > 0 && !manual) return false
+        if (types.size > 0) {
+          const key = manual ? activityTypeOf(a)?.key : undefined
+          if (!key || !types.has(key)) return false
+        }
         return true
       })
       .sort((a, b) => when(b).getTime() - when(a).getTime())
@@ -272,11 +281,11 @@ export function Timeline({
     )
   }
 
-  const toggleType = (t: ManualActivityType) =>
+  const toggleType = (key: string) =>
     setTypes((s) => {
       const n = new Set(s)
-      if (n.has(t)) n.delete(t)
-      else n.add(t)
+      if (n.has(key)) n.delete(key)
+      else n.add(key)
       return n
     })
 
@@ -295,21 +304,22 @@ export function Timeline({
             { value: 'system', label: 'Sistema', count: activities.length - manualCount },
           ]}
         />
-        {view !== 'system' && (
+        {view !== 'system' && presentTypes.length > 1 && (
           <div className="flex flex-wrap gap-1.5">
-            {MANUAL_ACTIVITY_TYPES.map((t) => {
-              const active = types.has(t)
+            {presentTypes.map((t) => {
+              const active = types.has(t.key)
               return (
                 <button
-                  key={t}
-                  onClick={() => toggleType(t)}
+                  key={t.key}
+                  onClick={() => toggleType(t.key)}
                   aria-pressed={active}
+                  style={active ? typeStyles(t).chip : undefined}
                   className={clsx(
-                    'rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset transition-colors',
-                    active ? MANUAL_STYLE[t].chip : 'text-ink-500 ring-ink-200 hover:text-ink-800',
+                    'rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors',
+                    !active && 'text-ink-500 ring-1 ring-ink-200 ring-inset hover:text-ink-800',
                   )}
                 >
-                  {ACTIVITY_LABEL[t]}
+                  {t.label} <span className="opacity-60 tabular-nums">{t.count}</span>
                 </button>
               )
             })}
@@ -332,8 +342,8 @@ export function Timeline({
               </h3>
               <ol className="relative space-y-3 before:absolute before:top-2 before:bottom-2 before:left-[18px] before:w-px before:bg-ink-200">
                 {g.items.map((a) =>
-                  isManual(a.actionType) ? (
-                    <ManualEntry key={a.id} a={a as Activity & { actionType: ManualActivityType }} />
+                  isManualActivity(a) ? (
+                    <ManualEntry key={a.id} a={a} />
                   ) : (
                     <SystemEntry key={a.id} a={a} labelFor={labelFor} />
                   ),

@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Pencil, Phone, Trash2 } from 'lucide-react'
 import type { Mulher } from '@/api'
 import { useAuth } from '@/auth/AuthContext'
+import { useMulheresCategoryId } from '@/auth/useRegistrableTypes'
 import { useDeleteMulher, useOverview } from '@/queries/records'
 import { ageFrom, columnLabel, formatDate, formatDateTime, formatPhone } from '@/lib/format'
 import { Avatar, DescriptionList, PageHeader } from '@/components/ui/Layout'
@@ -21,6 +22,7 @@ export function MulherDetailPage() {
   const { mulheresAccess: access } = useAuth()
   const overview = useOverview<Mulher>('clients', id)
   const del = useDeleteMulher()
+  const mulheresCategoryId = useMulheresCategoryId()
 
   if (!access.canRead) return <ForbiddenState />
   if (overview.isPending) return <LoadingBlock />
@@ -121,6 +123,7 @@ export function MulherDetailPage() {
           <RecordWorkspace
             kind="clients"
             recordId={m.id}
+            categoryId={mulheresCategoryId}
             activities={activities}
             files={files}
             access={access}

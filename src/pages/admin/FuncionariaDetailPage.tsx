@@ -12,7 +12,8 @@ import {
   useUser,
   useUserActivities,
 } from '@/queries/admin'
-import { ACTIVITY_LABEL, columnLabel, formatDateTime } from '@/lib/format'
+import { columnLabel, formatDateTime } from '@/lib/format'
+import { activityLabel } from '@/lib/activityTypes'
 import { Avatar, Card, PageHeader, Tabs } from '@/components/ui/Layout'
 import { Badge, ConfidentialityBadge } from '@/components/ui/Badge'
 import { Button, IconButton } from '@/components/ui/Button'
@@ -176,6 +177,7 @@ export function FuncionariaDetailPage() {
                             <ColumnsSummary
                               cols={p.allowedColumns}
                               labelFor={isMulheresCat(p.categoryId) ? columnLabel : undefined}
+                              activityTypes={p.allowedActivityTypes}
                             />
                           </td>
                           <td>
@@ -220,7 +222,7 @@ export function FuncionariaDetailPage() {
                     return (
                       <li key={a.id} className="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:gap-4">
                         <span className="w-36 shrink-0 text-xs text-ink-500">{formatDateTime(a.occurredAt ?? a.createdAt)}</span>
-                        <Badge tone="brand">{ACTIVITY_LABEL[a.actionType] ?? a.actionType}</Badge>
+                        <Badge tone="brand">{activityLabel(a)}</Badge>
                         <span className="flex-1 truncate text-sm text-ink-700">
                           {a.description ?? ''}
                           {href && (

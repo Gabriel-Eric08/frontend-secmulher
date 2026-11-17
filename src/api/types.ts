@@ -70,6 +70,8 @@ export interface CategoryAccess {
   canDelete: boolean
   allowedColumns: AllowedColumns | null
   maxConfidentiality: ConfidentialityLevel
+  /** Tipos de registro manual que o usuário pode registrar nesta categoria */
+  activityTypes?: ActivityTypeSummary[]
 }
 
 export interface MeResponse {
@@ -87,10 +89,15 @@ export interface Permission {
   canDelete: boolean
   allowedColumns: AllowedColumns | null
   maxConfidentiality: ConfidentialityLevel
+  /** Keys dos tipos de registro liberados; null = todos */
+  allowedActivityTypes: string[] | null
   createdAt: ISODateTime
 }
 
-export type PermissionRequest = Omit<Permission, 'id' | 'createdAt'>
+export type PermissionRequest = Omit<Permission, 'id' | 'createdAt' | 'allowedActivityTypes'> & {
+  /** [] remove a restrição (todos os tipos) */
+  allowedActivityTypes: string[]
+}
 
 // ---------------------------------------------------------------- Categorias e campos
 
@@ -203,7 +210,9 @@ export interface SearchRequest {
 /** Segmento de rota compartilhado: /clients/{id}/... ou /dynamic-entities/{id}/... */
 export type RecordKind = 'clients' | 'dynamic-entities'
 
-export type ManualActivityType = 'TRIAGE' | 'SERVICE' | 'FOLLOW_UP' | 'NOTE'
+/** Tipos manuais antigos (enum fixo): ainda aparecem em registros não migrados. */
+export type LegacyManualType = 'TRIAGE' | 'SERVICE' | 'FOLLOW_UP' | 'NOTE'
+export type ManualActivityType = 'MANUAL' | LegacyManualType
 export type AutoActivityType =
   | 'CREATED'
   | 'UPDATED'
@@ -230,6 +239,8 @@ export interface Activity {
   userId: UUID | null
   userName: string | null
   actionType: ActivityType
+  /** Tipo do registro manual (label gravado no momento do registro); null nos automáticos */
+  activityType: ActivityTypeSummary | null
   description: string | null
   /** Em UPDATED: {"campo": {"antigo": …, "novo": …}} */
   changes: Record<string, ActivityChange | unknown> | null
@@ -239,8 +250,34 @@ export interface Activity {
   redacted: boolean
 }
 
+// ---------------------------------------------------------------- Tipos de registro (por categoria)
+
+export interface ActivityTypeSummary {
+  id: UUID
+  key: string
+  label: string
+  color: string | null
+}
+
+export interface CategoryActivityType extends ActivityTypeSummary {
+  categoryId: UUID
+  description: string | null
+  position: number
+  isActive: boolean
+  createdAt: ISODateTime
+}
+
+export interface ActivityTypeRequest {
+  key: string
+  label: string
+  description?: string | null
+  color?: string | null
+  position: number
+  isActive: boolean
+}
+
 export interface ActivityRequest {
-  actionType: ManualActivityType
+  activityTypeId: UUID
   description: string
   responsibleEmployee?: string
   occurredAt?: string

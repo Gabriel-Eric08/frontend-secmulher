@@ -19,7 +19,16 @@ export function ActionFlags({ p }: { p: { canRead: boolean; canCreate: boolean; 
   )
 }
 
-export function ColumnsSummary({ cols, labelFor = (c) => c }: { cols: AllowedColumns | null; labelFor?: (c: string) => string }) {
+export function ColumnsSummary({
+  cols,
+  labelFor = (c) => c,
+  activityTypes,
+}: {
+  cols: AllowedColumns | null
+  labelFor?: (c: string) => string
+  /** keys dos tipos de registro liberados; null/vazio = todos */
+  activityTypes?: string[] | null
+}) {
   const fmt = (list?: string[]) =>
     list === undefined ? 'todas' : list.length === 0 ? 'nenhuma' : list.map(labelFor).join(', ')
   return (
@@ -30,6 +39,12 @@ export function ColumnsSummary({ cols, labelFor = (c) => c }: { cols: AllowedCol
       <p>
         <span className="text-ink-400">Escrita:</span> {fmt(cols?.write)}
       </p>
+      {activityTypes !== undefined && (
+        <p>
+          <span className="text-ink-400">Registros:</span>{' '}
+          {activityTypes?.length ? activityTypes.join(', ') : 'todos os tipos'}
+        </p>
+      )}
     </div>
   )
 }

@@ -115,7 +115,11 @@ export function PermissoesPage() {
                         <ActionFlags p={p} />
                       </td>
                       <td>
-                        <ColumnsSummary cols={p.allowedColumns} labelFor={isMulheres ? columnLabel : undefined} />
+                        <ColumnsSummary
+                          cols={p.allowedColumns}
+                          labelFor={isMulheres ? columnLabel : undefined}
+                          activityTypes={p.allowedActivityTypes}
+                        />
                       </td>
                       <td>
                         <ConfidentialityBadge level={p.maxConfidentiality} />

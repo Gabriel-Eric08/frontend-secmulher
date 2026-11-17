@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ExternalLink, Pencil, Plus, Tags, Trash2 } from 'lucide-react'
 import { ApiError, type CategoryField } from '@/api'
 import { useCategory, useDeleteField, useFields } from '@/queries/admin'
 import { FIELD_TYPE_LABEL } from '@/lib/format'
@@ -74,6 +74,9 @@ export function CamposPage() {
           <>
             <ButtonLink to={`/cadastros/${categoryId}`} variant="secondary" icon={<ExternalLink className="size-4" />}>
               Ver registros
+            </ButtonLink>
+            <ButtonLink to={`/admin/categorias/${categoryId}/tipos`} variant="secondary" icon={<Tags className="size-4" />}>
+              Tipos de registro
             </ButtonLink>
             <Button icon={<Plus className="size-4" />} onClick={() => setModal({ open: true })}>
               Novo campo

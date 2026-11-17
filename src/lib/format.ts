@@ -1,4 +1,4 @@
-import type { ActivityType, ConfidentialityLevel, FieldType, FilterOperator, ManualActivityType } from '@/api'
+import type { ActivityType, ConfidentialityLevel, FieldType, FilterOperator } from '@/api'
 
 // ---------------------------------------------------------------- Datas
 
@@ -101,6 +101,7 @@ export const CONFIDENTIALITY_HINT: Record<ConfidentialityLevel, string> = {
 }
 
 export const ACTIVITY_LABEL: Record<ActivityType, string> = {
+  MANUAL: 'Registro',
   TRIAGE: 'Triagem',
   SERVICE: 'Atendimento',
   FOLLOW_UP: 'Acompanhamento',
@@ -113,8 +114,6 @@ export const ACTIVITY_LABEL: Record<ActivityType, string> = {
   FILE_REMOVED: 'Documento removido',
   FILE_DOWNLOADED: 'Documento baixado',
 }
-
-export const MANUAL_ACTIVITY_TYPES: ManualActivityType[] = ['TRIAGE', 'SERVICE', 'FOLLOW_UP', 'NOTE']
 
 export const FIELD_TYPE_LABEL: Record<FieldType, string> = {
   TEXT: 'Texto',

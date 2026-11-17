@@ -14,6 +14,9 @@ export const qk = {
     all: ['categories'] as const,
     detail: (id: UUID) => ['categories', id] as const,
     fields: (categoryId: UUID) => ['categories', categoryId, 'fields'] as const,
+    activityTypes: (categoryId: UUID, includeInactive = false) =>
+      ['categories', categoryId, 'activity-types', { includeInactive }] as const,
+    activityTypesAll: (categoryId: UUID) => ['categories', categoryId, 'activity-types'] as const,
   },
 
   permissions: {

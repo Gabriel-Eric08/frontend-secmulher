@@ -17,6 +17,7 @@ import { FuncionariaDetailPage } from '@/pages/admin/FuncionariaDetailPage'
 import { CategoriasPage } from '@/pages/admin/CategoriasPage'
 import { CamposPage } from '@/pages/admin/CamposPage'
 import { PermissoesPage } from '@/pages/admin/PermissoesPage'
+import { TiposRegistroPage } from '@/pages/admin/TiposRegistroPage'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -48,6 +49,7 @@ const router = createBrowserRouter([
               { path: 'funcionarias/:id', element: <FuncionariaDetailPage /> },
               { path: 'categorias', element: <CategoriasPage /> },
               { path: 'categorias/:categoryId/campos', element: <CamposPage /> },
+              { path: 'categorias/:categoryId/tipos', element: <TiposRegistroPage /> },
               { path: 'permissoes', element: <PermissoesPage /> },
             ],
           },

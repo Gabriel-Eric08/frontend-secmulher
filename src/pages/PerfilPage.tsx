@@ -10,6 +10,7 @@ import { Field, Input } from '@/components/ui/Form'
 import { EmptyState } from '@/components/ui/States'
 import { useToast } from '@/components/ui/Toast'
 import { ActionFlags } from '@/components/admin/PermissionSummary'
+import { TypeChip } from '@/components/records/Timeline'
 
 export function PerfilPage() {
   const { user, isAdmin, access } = useAuth()
@@ -93,6 +94,12 @@ export function PerfilPage() {
                       Colunas visíveis: {a.allowedColumns?.read ? a.allowedColumns.read.map(label).join(', ') || 'nenhuma' : 'todas'} ·
                       Documentos até: {CONFIDENTIALITY_LABEL[a.maxConfidentiality]}
                     </p>
+                    {a.canUpdate && a.activityTypes && (
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-ink-500">
+                        <span>Pode registrar:</span>
+                        {a.activityTypes.length ? a.activityTypes.map((t) => <TypeChip key={t.id} type={t} />) : 'nenhum tipo'}
+                      </div>
+                    )}
                   </li>
                 )
               })}

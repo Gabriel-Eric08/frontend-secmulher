@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { ApiError, type Category, type ConfidentialityLevel, type Permission, type PermissionRequest, type User, type UUID } from '@/api'
 import { CONFIDENTIALITY_ORDER, MULHERES_TABLE } from '@/auth/access'
-import { useFields, useSavePermission } from '@/queries/admin'
+import { useActivityTypes, useFields, useSavePermission } from '@/queries/admin'
 import { CONFIDENTIALITY_HINT, CONFIDENTIALITY_LABEL, MULHER_COLUMNS } from '@/lib/format'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
@@ -19,9 +19,11 @@ function ColumnPicker({
   options,
   value,
   onChange,
+  allLabel = 'Todas as colunas',
 }: {
   title: string
   description: string
+  allLabel?: string
   options: ColumnOption[]
   /** null = todas as colunas (chave ausente em allowedColumns) */
   value: string[] | null
@@ -35,7 +37,7 @@ function ColumnPicker({
       <div className="mb-3 flex gap-4 text-sm">
         <label className="flex items-center gap-2">
           <input type="radio" className="accent-brand-700" checked={!restricted} onChange={() => onChange(null)} />
-          Todas as colunas
+          {allLabel}
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -49,7 +51,7 @@ function ColumnPicker({
       </div>
       {restricted && (
         <div className="grid gap-2 border-t border-ink-100 pt-3 sm:grid-cols-2">
-          {options.length === 0 && <p className="text-xs text-ink-500">Esta categoria não tem campos.</p>}
+          {options.length === 0 && <p className="text-xs text-ink-500">Nada cadastrado nesta categoria ainda.</p>}
           {options.map((o) => (
             <Checkbox
               key={o.column}
@@ -95,6 +97,8 @@ export function PermissionModal({
   const [read, setRead] = useState<string[] | null>(null)
   const [write, setWrite] = useState<string[] | null>(null)
   const [maxConf, setMaxConf] = useState<ConfidentialityLevel>('INTERNAL')
+  /** keys dos tipos de registro liberados; null = todos */
+  const [atypes, setAtypes] = useState<string[] | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -109,11 +113,18 @@ export function PermissionModal({
     setRead(permission?.allowedColumns?.read ?? null)
     setWrite(permission?.allowedColumns?.write ?? null)
     setMaxConf(permission?.maxConfidentiality ?? 'INTERNAL')
+    setAtypes(permission?.allowedActivityTypes?.length ? permission.allowedActivityTypes : null)
   }, [open, permission, fixedUserId])
 
   const category = categories.find((c) => c.id === categoryId)
   const isDynamic = category?.entityType === 'dynamic'
   const fields = useFields(categoryId || undefined, open && isDynamic)
+  const activityTypes = useActivityTypes(categoryId || undefined, { includeInactive: true, enabled: open })
+  const typeOptions = useMemo<ColumnOption[]>(
+    () =>
+      (activityTypes.data ?? []).map((t) => ({ column: t.key, label: t.isActive ? t.label : `${t.label} (inativo)` })),
+    [activityTypes.data],
+  )
 
   const columnOptions = useMemo<ColumnOption[]>(() => {
     if (!category) return []
@@ -129,13 +140,23 @@ export function PermissionModal({
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!userId || !categoryId) return toast.error('Selecione a funcionária e a categoria.')
+    // [] na API significa "todos"; uma restrição vazia não faz sentido
+    if (atypes !== null && atypes.length === 0)
+      return toast.error('Selecione ao menos um tipo de registro, ou libere todos.')
     const allowedColumns: PermissionRequest['allowedColumns'] = {}
     if (read !== null) allowedColumns.read = read
     if (write !== null) allowedColumns.write = write
     try {
       await save.mutateAsync({
         id: permission?.id,
-        body: { userId, categoryId, ...flags, allowedColumns, maxConfidentiality: maxConf },
+        body: {
+          userId,
+          categoryId,
+          ...flags,
+          allowedColumns,
+          maxConfidentiality: maxConf,
+          allowedActivityTypes: atypes ?? [],
+        },
       })
       toast.success('Permissão salva.')
       onClose()
@@ -230,6 +251,17 @@ export function PermissionModal({
               onChange={setWrite}
             />
           </div>
+        )}
+
+        {category && (
+          <ColumnPicker
+            title="Tipos de registro na linha do tempo"
+            description="Quais tipos ela pode registrar (exige permissão de edição). Ela continua vendo todos na linha do tempo."
+            allLabel="Todos os tipos"
+            options={typeOptions}
+            value={atypes}
+            onChange={setAtypes}
+          />
         )}
 
         <Field label="Nível máximo de sigilo de documentos" htmlFor="p-conf" hint={CONFIDENTIALITY_HINT[maxConf]}>

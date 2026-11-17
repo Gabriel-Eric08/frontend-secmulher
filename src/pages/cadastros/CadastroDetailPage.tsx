@@ -97,6 +97,7 @@ export function CadastroDetailPage() {
           <RecordWorkspace
             kind="dynamic-entities"
             recordId={e.id}
+            categoryId={e.categoryId}
             activities={activities}
             files={files}
             access={access}

@@ -16,9 +16,11 @@ export function RecordWorkspace({
   files,
   access,
   labelFor,
+  categoryId,
 }: {
   kind: RecordKind
   recordId: UUID
+  categoryId: UUID | undefined
   activities: Activity[]
   files: FileMeta[]
   access: Access
@@ -53,7 +55,13 @@ export function RecordWorkspace({
           <FilesPanel files={files} kind={kind} recordId={recordId} access={access} />
         )}
       </div>
-      <ActivityFormModal open={adding} onClose={() => setAdding(false)} kind={kind} recordId={recordId} />
+      <ActivityFormModal
+        open={adding}
+        onClose={() => setAdding(false)}
+        kind={kind}
+        recordId={recordId}
+        categoryId={categoryId}
+      />
     </section>
   )
 }

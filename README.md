@@ -42,6 +42,7 @@ src/
 | `/cadastros/:categoryId[/novo|/:id|/:id/editar]` | Categorias dinâmicas (`/dynamic-entities`) |
 | `/admin/funcionarias[/:id]` | Usuárias, permissões e auditoria |
 | `/admin/categorias[/:id/campos]` | Categorias e campos personalizados |
+| `/admin/categorias/:id/tipos` | Tipos de registro da linha do tempo da categoria |
 | `/admin/permissoes` | Matriz funcionária × categoria |
 | `/perfil` | Troca de senha e acessos efetivos |
 
