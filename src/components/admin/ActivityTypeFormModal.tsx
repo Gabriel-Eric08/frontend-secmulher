@@ -198,7 +198,7 @@ export function ActivityTypeFormModal({
                 type="color"
                 value={HEX_RE.test(color) && color.length === 7 ? color : DEFAULT_TYPE_COLOR}
                 onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                className="size-7 cursor-pointer rounded border border-ink-300 bg-white p-0.5"
+                className="size-7 cursor-pointer rounded border border-ink-300 bg-surface p-0.5"
               />
               outra
             </label>

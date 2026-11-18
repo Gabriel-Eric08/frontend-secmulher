@@ -36,14 +36,14 @@ export function Modal({ open, onClose, title, description, children, footer, siz
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-ink-900/40" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 animate-fade-in bg-overlay backdrop-blur-[2px]" onClick={onClose} aria-hidden />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         className={clsx(
-          'relative flex max-h-[92vh] w-full flex-col rounded-t-xl bg-white shadow-xl sm:rounded-xl',
+          'relative flex max-h-[92vh] w-full animate-sheet-up flex-col rounded-t-2xl border border-ink-200 bg-surface shadow-(--shadow-pop) sm:animate-scale-in sm:rounded-2xl',
           { sm: 'sm:max-w-md', md: 'sm:max-w-lg', lg: 'sm:max-w-2xl' }[size],
         )}
       >
@@ -52,7 +52,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
             <h2 className="text-base font-semibold text-ink-900">{title}</h2>
             {description && <p className="mt-0.5 text-sm text-ink-500">{description}</p>}
           </div>
-          <button onClick={onClose} className="rounded p-1 text-ink-400 hover:bg-ink-100 hover:text-ink-700" aria-label="Fechar">
+          <button onClick={onClose} className="-mt-0.5 -mr-1 rounded-lg p-1.5 text-ink-400 transition-all hover:rotate-90 hover:bg-ink-100 hover:text-ink-700" aria-label="Fechar">
             <X className="size-4" />
           </button>
         </div>

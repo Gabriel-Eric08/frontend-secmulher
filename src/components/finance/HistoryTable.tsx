@@ -52,7 +52,7 @@ function Table({ rows }: { rows: { operation: FinanceOperation; columns: Column[
           </thead>
           <tbody>
             {rows.map(({ operation: op, columns }) => (
-              <tr key={op.id} className="cursor-pointer hover:bg-ink-50" onClick={() => setSelected(op)}>
+              <tr key={op.id} className="row-link" onClick={() => setSelected(op)}>
                 <td className="whitespace-nowrap text-ink-600 tabular-nums">{formatDate(op.operationDate)}</td>
                 <td className="min-w-56">
                   <div className="flex items-center gap-2.5">

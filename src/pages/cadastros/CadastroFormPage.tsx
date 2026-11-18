@@ -7,7 +7,7 @@ import { useEntity, useSaveEntity } from '@/queries/records'
 import { Card, PageHeader } from '@/components/ui/Layout'
 import { Button } from '@/components/ui/Button'
 import { Alert, EmptyState, ErrorState, ForbiddenState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { PageSkeleton } from '@/components/ui/Spinner'
 import { useToast } from '@/components/ui/Toast'
 import { DynamicFieldInput } from '@/components/dynamic/DynamicField'
 
@@ -32,7 +32,7 @@ export function CadastroFormPage() {
   }, [existing.data])
 
   if (isEdit ? !access.canUpdate : !access.canCreate) return <ForbiddenState />
-  if (fields.isPending || category.isPending || (isEdit && existing.isPending)) return <LoadingBlock />
+  if (fields.isPending || category.isPending || (isEdit && existing.isPending)) return <PageSkeleton />
   const error = fields.error ?? category.error ?? existing.error
   if (error) return <ErrorState error={error} />
 

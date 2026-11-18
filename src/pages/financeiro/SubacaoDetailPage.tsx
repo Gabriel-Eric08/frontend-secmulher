@@ -14,7 +14,7 @@ import { formatPct } from '@/lib/finance'
 import { PageHeader, Tabs } from '@/components/ui/Layout'
 import { Button, IconButton } from '@/components/ui/Button'
 import { EmptyState, ErrorState, ForbiddenState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { LoadingBlock, PageSkeleton } from '@/components/ui/Spinner'
 import { useConfirm } from '@/components/ui/Confirm'
 import { useToast } from '@/components/ui/Toast'
 import { AsOfBanner, AsOfDatePicker, useAsOfDate } from '@/components/finance/AsOfDate'
@@ -51,7 +51,7 @@ export function SubacaoDetailPage() {
   const del = useDeleteSubAction()
 
   if (!access.canRead) return <ForbiddenState message="Seu perfil não tem acesso ao módulo financeiro." />
-  if (sub.isPending) return <LoadingBlock />
+  if (sub.isPending) return <PageSkeleton />
   if (sub.isError) return <ErrorState error={sub.error} onRetry={() => sub.refetch()} />
 
   const s = sub.data

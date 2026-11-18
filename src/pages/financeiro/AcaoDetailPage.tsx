@@ -11,7 +11,7 @@ import { Button, IconButton } from '@/components/ui/Button'
 import { MenuButton } from '@/components/ui/Menu'
 import { PeriodFilter } from '@/components/finance/PeriodFilter'
 import { EmptyState, ErrorState, ForbiddenState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { LoadingBlock, PageSkeleton } from '@/components/ui/Spinner'
 import { useConfirm } from '@/components/ui/Confirm'
 import { useToast } from '@/components/ui/Toast'
 import { AsOfBanner, AsOfDatePicker, useAsOfDate } from '@/components/finance/AsOfDate'
@@ -44,7 +44,7 @@ export function AcaoDetailPage() {
   const del = useDeleteFinanceAction()
 
   if (!access.canRead) return <ForbiddenState message="Seu perfil não tem acesso ao módulo financeiro." />
-  if (action.isPending) return <LoadingBlock />
+  if (action.isPending) return <PageSkeleton />
   if (action.isError) return <ErrorState error={action.error} onRetry={() => action.refetch()} />
 
   const a = action.data
@@ -239,7 +239,7 @@ export function AcaoDetailPage() {
                 </thead>
                 <tbody>
                   {subs.map((s) => (
-                    <tr key={s.id} className={clsx('hover:bg-ink-50', !s.isActive && 'opacity-60')}>
+                    <tr key={s.id} className={clsx('row-link', !s.isActive && 'opacity-60')}>
                       <td>
                         <Link to={`/financeiro/subacoes/${s.id}${qs}`} className="group block min-w-48">
                           <span className="flex items-center gap-2">

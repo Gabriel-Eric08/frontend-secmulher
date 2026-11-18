@@ -340,7 +340,7 @@ export function TransferModal({
               }}
               className={clsx(
                 'rounded-md px-3 py-2 text-left transition-all',
-                mode === m.value ? 'bg-white shadow-sm' : 'text-ink-500 hover:text-ink-800',
+                mode === m.value ? 'bg-surface shadow-sm' : 'text-ink-500 hover:text-ink-800',
               )}
             >
               <span className="block text-sm font-medium">{m.label}</span>

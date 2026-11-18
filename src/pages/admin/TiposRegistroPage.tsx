@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/ui/Layout'
 import { Badge } from '@/components/ui/Badge'
 import { Button, ButtonLink, IconButton } from '@/components/ui/Button'
 import { EmptyState, ErrorState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { LoadingBlock, PageSkeleton } from '@/components/ui/Spinner'
 import { useConfirm } from '@/components/ui/Confirm'
 import { useToast } from '@/components/ui/Toast'
 import { ActivityTypeFormModal } from '@/components/admin/ActivityTypeFormModal'
@@ -25,7 +25,7 @@ export function TiposRegistroPage() {
   const toast = useToast()
   const [modal, setModal] = useState<{ open: boolean; type?: CategoryActivityType | null }>({ open: false })
 
-  if (category.isPending) return <LoadingBlock />
+  if (category.isPending) return <PageSkeleton />
   if (category.isError) return <ErrorState error={category.error} />
 
   const list = types.data ?? []

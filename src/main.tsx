@@ -5,6 +5,7 @@ import { ApiError } from '@/api'
 import { AuthProvider } from '@/auth/AuthContext'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ConfirmProvider } from '@/components/ui/Confirm'
+import { ThemeProvider } from '@/theme/ThemeContext'
 import { App } from './App'
 import './index.css'
 
@@ -21,6 +22,7 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <ThemeProvider>
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <ConfirmProvider>
@@ -30,5 +32,6 @@ createRoot(document.getElementById('root')!).render(
         </ConfirmProvider>
       </ToastProvider>
     </QueryClientProvider>
+    </ThemeProvider>
   </StrictMode>,
 )

@@ -236,7 +236,7 @@ function ActionCard({ action: a, date }: { action: FinanceAction; date?: string 
   const qs = date ? `?data=${date}` : ''
   const subs = [...a.subActions].sort((x, y) => x.code.localeCompare(y.code, 'pt-BR', { numeric: true }))
   return (
-    <li className={clsx('card overflow-hidden transition-colors hover:border-brand-200', !a.isActive && 'opacity-70')}>
+    <li className={clsx('card card-interactive overflow-hidden', !a.isActive && 'opacity-70')}>
       <div className="flex items-stretch">
         <Link to={`/financeiro/acoes/${a.id}${qs}`} className="grid min-w-0 flex-1 gap-4 p-5 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] md:items-center">
           <div className="min-w-0">
@@ -276,7 +276,7 @@ function ActionCard({ action: a, date }: { action: FinanceAction; date?: string 
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="flex w-11 shrink-0 items-center justify-center border-l border-ink-100 text-ink-400 hover:bg-ink-50 hover:text-ink-700"
+            className="flex w-11 shrink-0 items-center justify-center border-l border-ink-100 text-ink-400 transition-colors hover:bg-brand-50 hover:text-brand-700"
             aria-expanded={open}
             aria-label={open ? 'Ocultar subações' : 'Mostrar subações'}
           >
@@ -285,12 +285,12 @@ function ActionCard({ action: a, date }: { action: FinanceAction; date?: string 
         )}
       </div>
       {open && (
-        <ul className="divide-y divide-ink-100 border-t border-ink-100 bg-ink-50/50">
+        <ul className="animate-fade-down divide-y divide-ink-100 border-t border-ink-100 bg-ink-50/50">
           {subs.map((s) => (
             <li key={s.id}>
               <Link
                 to={`/financeiro/subacoes/${s.id}${qs}`}
-                className="grid gap-2 px-5 py-2.5 hover:bg-white sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_10rem] sm:items-center"
+                className="list-link grid gap-2 px-5 py-2.5 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_10rem] sm:items-center"
               >
                 <p className="flex min-w-0 items-center gap-2 text-sm">
                   <CodeTag>{s.code}</CodeTag>

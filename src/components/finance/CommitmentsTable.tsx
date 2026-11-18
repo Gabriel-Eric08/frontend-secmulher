@@ -25,7 +25,7 @@ export function CommitmentsTable({ items, showSubAction = true }: { items: Commi
           {items.map((c) => (
             <tr
               key={c.id}
-              className="cursor-pointer hover:bg-ink-50"
+              className="row-link"
               onClick={() => navigate(`/financeiro/empenhos/${c.id}`)}
             >
               <td className="whitespace-nowrap">

@@ -18,7 +18,7 @@ import { Avatar, Card, PageHeader, Tabs } from '@/components/ui/Layout'
 import { Badge, ConfidentialityBadge } from '@/components/ui/Badge'
 import { Button, IconButton } from '@/components/ui/Button'
 import { Alert, EmptyState, ErrorState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { LoadingBlock, PageSkeleton } from '@/components/ui/Spinner'
 import { useConfirm } from '@/components/ui/Confirm'
 import { useToast } from '@/components/ui/Toast'
 import { UserFormModal } from '@/components/admin/UserFormModal'
@@ -41,7 +41,7 @@ export function FuncionariaDetailPage() {
   const [editing, setEditing] = useState(false)
   const [permModal, setPermModal] = useState<{ open: boolean; permission?: Permission | null }>({ open: false })
 
-  if (user.isPending) return <LoadingBlock />
+  if (user.isPending) return <PageSkeleton />
   if (user.isError) return <ErrorState error={user.error} />
 
   const u = user.data

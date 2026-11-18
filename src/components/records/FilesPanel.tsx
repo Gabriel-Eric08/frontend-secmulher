@@ -174,7 +174,7 @@ function FileRow({ file, kind, recordId, access }: { file: FileMeta; kind: Recor
           {menu && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setMenu(false)} />
-              <div className="absolute right-0 z-20 mt-1 w-56 rounded-md border border-ink-200 bg-white py-1 text-sm shadow-lg">
+              <div className="absolute right-0 z-20 mt-1 w-56 rounded-md border border-ink-200 bg-surface py-1 text-sm shadow-lg">
                 {access.canUpdate && (
                   <>
                     <p className="px-3 py-1.5 text-xs font-medium text-ink-500">Alterar sigilo</p>

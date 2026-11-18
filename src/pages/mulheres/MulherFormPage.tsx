@@ -8,7 +8,7 @@ import { Card, PageHeader } from '@/components/ui/Layout'
 import { Button } from '@/components/ui/Button'
 import { Field, Input, Switch } from '@/components/ui/Form'
 import { Alert, ErrorState, ForbiddenState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { PageSkeleton } from '@/components/ui/Spinner'
 import { useToast } from '@/components/ui/Toast'
 
 interface FormState {
@@ -45,7 +45,7 @@ export function MulherFormPage() {
   }, [existing.data])
 
   if (isEdit ? !access.canUpdate : !access.canCreate) return <ForbiddenState />
-  if (isEdit && existing.isPending) return <LoadingBlock />
+  if (isEdit && existing.isPending) return <PageSkeleton />
   if (isEdit && existing.isError) return <ErrorState error={existing.error} />
 
   const hidden = new Set(existing.data?.hiddenFields ?? [])

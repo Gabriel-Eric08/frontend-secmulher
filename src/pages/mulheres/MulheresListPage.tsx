@@ -167,7 +167,7 @@ export function MulheresListPage() {
                   return (
                     <tr
                       key={m.id}
-                      className="cursor-pointer hover:bg-ink-50"
+                      className="row-link"
                       onClick={() => navigate(`/mulheres/${m.id}`)}
                     >
                       <td>

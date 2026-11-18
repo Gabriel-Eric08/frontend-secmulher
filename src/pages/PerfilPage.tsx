@@ -4,6 +4,7 @@ import { ApiError, authApi } from '@/api'
 import { useAuth } from '@/auth/AuthContext'
 import { CONFIDENTIALITY_LABEL, columnLabel } from '@/lib/format'
 import { Avatar, Card, PageHeader } from '@/components/ui/Layout'
+import { ThemeSelector } from '@/theme/ThemeToggle'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/Form'
@@ -55,6 +56,10 @@ export function PerfilPage() {
                 <div className="mt-2">{isAdmin ? <Badge tone="brand">Administradora</Badge> : <Badge>Equipe</Badge>}</div>
               </div>
             </div>
+          </Card>
+
+          <Card title="Aparência" description="Vale só para este navegador.">
+            <ThemeSelector />
           </Card>
 
           <Card title="Alterar senha">

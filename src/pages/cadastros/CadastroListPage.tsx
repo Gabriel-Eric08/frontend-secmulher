@@ -122,7 +122,7 @@ export function CadastroListPage() {
               </thead>
               <tbody>
                 {rows.map((e) => (
-                  <tr key={e.id} className="cursor-pointer hover:bg-ink-50" onClick={() => navigate(`${base}/${e.id}`)}>
+                  <tr key={e.id} className="row-link" onClick={() => navigate(`${base}/${e.id}`)}>
                     {columns.map((f, i) => (
                       <td key={f.key} className={i === 0 ? 'font-medium text-ink-900' : 'text-ink-600'}>
                         {e.hiddenFields?.includes(f.key) ? <HiddenValue /> : <DynamicValue field={f} value={e.customFields[f.key]} />}

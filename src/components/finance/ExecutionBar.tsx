@@ -37,9 +37,12 @@ export function ExecutionBar({
       aria-label={`Empenhado ${formatPct(committed, total)}, liquidado ${formatPct(liquidated, total)}, pago ${formatPct(paid, total)}`}
       title={`Empenhado ${formatMoney(committed)} · Liquidado ${formatMoney(liquidated)} · Pago ${formatMoney(paid)}`}
     >
+      {/* as faixas crescem da esquerda ao aparecer */}
+      <div className="flex h-full w-full origin-left animate-bar-in">
       {segments.map((s) => (
         <div key={s.key} className={clsx('h-full transition-[width] duration-500', s.cls)} style={{ width: `${s.width}%` }} />
       ))}
+      </div>
     </div>
   )
 }

@@ -66,7 +66,7 @@ export function Checkbox({
 }: InputHTMLAttributes<HTMLInputElement> & { label: ReactNode; description?: ReactNode }) {
   return (
     <label className={clsx('flex cursor-pointer items-start gap-2.5 text-sm', rest.disabled && 'cursor-not-allowed opacity-60', className)}>
-      <input type="checkbox" className="mt-0.5 size-4 rounded border-ink-300 accent-brand-700" {...rest} />
+      <input type="checkbox" className="mt-0.5 size-4 rounded border-ink-300 accent-accent" {...rest} />
       <span>
         <span className="text-ink-800">{label}</span>
         {description && <span className="block text-xs text-ink-500">{description}</span>}
@@ -97,12 +97,12 @@ export function Switch({
         onClick={() => onChange(!checked)}
         className={clsx(
           'relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors',
-          checked ? 'bg-brand-700' : 'bg-ink-300',
+          checked ? 'bg-accent' : 'bg-ink-300',
         )}
       >
         <span
           className={clsx(
-            'absolute top-0.5 size-4 rounded-full bg-white shadow transition-transform',
+            'absolute top-0.5 size-4 rounded-full bg-surface shadow transition-transform',
             checked ? 'translate-x-4.5' : 'translate-x-0.5',
           )}
         />

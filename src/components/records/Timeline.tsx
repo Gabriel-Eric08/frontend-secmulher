@@ -66,7 +66,7 @@ function Changes({ changes, labelFor }: { changes: Activity['changes']; labelFor
   const entries = changes && typeof changes === 'object' ? Object.entries(changes) : []
   if (entries.length === 0) return null
   return (
-    <dl className="mt-2 divide-y divide-ink-100 rounded-md border border-ink-200 bg-white text-xs">
+    <dl className="mt-2 divide-y divide-ink-100 rounded-md border border-ink-200 bg-surface text-xs">
       {entries.map(([key, v]) => (
         <div key={key} className="grid grid-cols-[minmax(0,9rem)_1fr] gap-3 px-3 py-1.5">
           <dt className="truncate font-medium text-ink-600">{labelFor(key)}</dt>
@@ -117,13 +117,13 @@ function ManualEntry({ a }: { a: Activity }) {
   return (
     <li className="relative flex gap-3 pl-0.5">
       <span
-        className="relative z-10 mt-3 flex size-8 shrink-0 items-center justify-center rounded-full ring-4 ring-white"
+        className="relative z-10 mt-3 flex size-8 shrink-0 items-center justify-center rounded-full ring-4 ring-surface"
         style={styles.icon}
       >
         <Icon className="size-4" />
       </span>
       <article
-        className="min-w-0 flex-1 rounded-lg border border-l-4 border-ink-200 bg-white px-4 py-3 shadow-xs"
+        className="min-w-0 flex-1 rounded-lg border border-l-4 border-ink-200 bg-surface px-4 py-3 shadow-xs"
         style={styles.accent}
       >
         <header className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -158,7 +158,7 @@ function SystemEntry({ a, labelFor }: { a: Activity; labelFor: (key: string) => 
 
   return (
     <li className="relative flex gap-3 pl-0.5">
-      <span className="relative z-10 mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-500 ring-4 ring-white">
+      <span className="relative z-10 mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-500 ring-4 ring-surface">
         <Icon className="size-3.5" />
       </span>
       <div className="min-w-0 flex-1 py-1.5">
@@ -210,7 +210,7 @@ function Segmented({
           onClick={() => onChange(o.value)}
           className={clsx(
             'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors',
-            value === o.value ? 'bg-white text-ink-900 shadow-xs' : 'text-ink-500 hover:text-ink-800',
+            value === o.value ? 'bg-surface text-ink-900 shadow-xs' : 'text-ink-500 hover:text-ink-800',
           )}
         >
           {o.label}

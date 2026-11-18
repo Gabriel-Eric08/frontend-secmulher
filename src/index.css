@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* dark: segue a classe .dark no <html> (definida pelo ThemeProvider / script do index.html) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
@@ -27,6 +30,154 @@
   --color-ink-700: #3f394a;
   --color-ink-800: #2a2532;
   --color-ink-900: #1a1720;
+
+  /*
+   * Tokens semânticos que NÃO invertem no tema escuro:
+   * surface   = fundo de cartões, inputs e modais
+   * accent    = preenchimento sólido de destaque (botão primário, switch, marcadores) com texto branco
+   * institutional = faixa do governo e painel do login
+   */
+  --color-surface: #ffffff;
+  --color-accent: #5b2a86;
+  --color-accent-hover: #4d2373;
+  --color-accent-active: #3f1c5e;
+  --color-institutional: #321649;
+  --color-overlay: rgb(26 23 32 / 0.45);
+
+  --shadow-glow: 0 0 0 3px rgb(123 74 168 / 0.12), 0 6px 20px -8px rgb(91 42 134 / 0.25);
+  --shadow-card: 0 1px 2px rgb(26 23 32 / 0.04);
+  --shadow-pop: 0 12px 32px -8px rgb(26 23 32 / 0.18), 0 2px 6px rgb(26 23 32 / 0.06);
+
+  /* Animações (geram as classes animate-*) */
+  --animate-fade-in: fade-in 0.2s ease-out both;
+  --animate-fade-up: fade-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-down: fade-down 0.22s ease-out both;
+  --animate-scale-in: scale-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-sheet-up: sheet-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-toast-in: toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-bar-in: bar-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shimmer: shimmer 1.4s ease-in-out infinite;
+  --animate-progress: progress 1.1s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-spin-slow: spin 1.4s linear infinite;
+  --animate-drawer-in: drawer-in 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade-down {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96) translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes sheet-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes bar-in {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @keyframes progress {
+    0% { transform: translateX(-100%) scaleX(0.3); }
+    50% { transform: translateX(0) scaleX(0.6); }
+    100% { transform: translateX(100%) scaleX(0.3); }
+  }
+  @keyframes drawer-in {
+    from { transform: translateX(-100%); }
+    to { transform: none; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+}
+
+/* ------------------------------------------------------------------ Tema escuro
+ * As escalas invertem: ink-50 vira o fundo mais escuro e ink-900 o texto mais claro;
+ * os tons claros do roxo viram fundos tingidos e os escuros viram lavanda legível.
+ * Assim todas as classes existentes (bg-ink-50, text-brand-700…) se adaptam sozinhas.
+ */
+.dark {
+  color-scheme: dark;
+
+  --color-brand-50: #1f1529;
+  --color-brand-100: #2a1b3b;
+  --color-brand-200: #3d2856;
+  --color-brand-300: #5b3e80;
+  --color-brand-400: #8462b0;
+  --color-brand-500: #9d7bcb;
+  --color-brand-600: #b294dc;
+  --color-brand-700: #c3aae6;
+  --color-brand-800: #d6c5ef;
+  --color-brand-900: #e8ddf6;
+  --color-brand-950: #f4eefb;
+
+  --color-ink-50: #0e0c12;
+  --color-ink-100: #1b1822;
+  --color-ink-200: #29252f;
+  --color-ink-300: #3a3443;
+  --color-ink-400: #6c657b;
+  --color-ink-500: #8f889c;
+  --color-ink-600: #aca6b8;
+  --color-ink-700: #c8c3d1;
+  --color-ink-800: #e1dde7;
+  --color-ink-900: #f3f1f6;
+
+  --color-surface: #15121a;
+  --color-accent: #7f4fb8;
+  --color-accent-hover: #8d5fc6;
+  --color-accent-active: #7243a8;
+  --color-institutional: #1a0f26;
+  --color-overlay: rgb(0 0 0 / 0.6);
+
+  /* Cores de status em versão escura (fundos tingidos, textos claros) */
+  --color-red-50: #2a1216;
+  --color-red-100: #3a171c;
+  --color-red-200: #5a2229;
+  --color-red-600: #f0656a;
+  --color-red-700: #f6999c;
+  --color-red-900: #fde2e3;
+  --color-amber-50: #261d0b;
+  --color-amber-200: #54401a;
+  --color-amber-700: #f3c053;
+  --color-amber-800: #f7d27f;
+  --color-amber-900: #fbe5b0;
+  --color-emerald-50: #0c241c;
+  --color-emerald-200: #164c38;
+  --color-emerald-600: #3ccf98;
+  --color-emerald-700: #6fe0b5;
+  --color-sky-50: #0b2130;
+  --color-sky-700: #86cff7;
+
+  --shadow-glow: 0 0 0 3px rgb(157 123 203 / 0.14), 0 8px 24px -10px rgb(127 79 184 / 0.45);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-pop: 0 16px 40px -10px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.04);
+
+  /* tipos de registro usam cor livre: clareia o texto e reforça o fundo no escuro */
+  --type-lighten: 55%;
+  --type-tint: 20%;
+}
+
+:root {
+  --type-lighten: 0%;
+  --type-tint: 8%;
 }
 
 @layer base {
@@ -39,22 +190,45 @@
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-brand-500;
   }
+  ::selection {
+    @apply bg-brand-200 text-ink-900;
+  }
+  /* Troca de tema suave: a classe fica no <html> só durante a transição */
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease,
+      fill 0.3s ease !important;
+  }
+  /* Barras de rolagem discretas nos dois temas */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink-300) transparent;
+  }
 }
 
 @layer components {
   .card {
-    @apply rounded-lg border border-ink-200 bg-white;
+    @apply rounded-xl border border-ink-200 bg-surface shadow-(--shadow-card);
+  }
+  /* Cartão clicável: o contorno ganha a cor de destaque e um brilho sutil */
+  .card-interactive {
+    @apply transition-[border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px hover:border-brand-300 hover:shadow-(--shadow-glow);
   }
   .label {
     @apply mb-1.5 block text-sm font-medium text-ink-700;
   }
   .input {
-    @apply block w-full rounded-md border border-ink-300 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400
-      transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none
-      disabled:cursor-not-allowed disabled:bg-ink-100 disabled:text-ink-500;
+    @apply block w-full rounded-lg border border-ink-300 bg-surface px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400
+      transition-[border-color,box-shadow] duration-150 hover:border-ink-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 focus:outline-none
+      disabled:cursor-not-allowed disabled:bg-ink-100 disabled:text-ink-500 disabled:hover:border-ink-300;
   }
   .input-error {
-    @apply border-red-500 focus:border-red-500 focus:ring-red-100;
+    @apply border-red-500 hover:border-red-500 focus:border-red-500 focus:ring-red-500/15;
   }
   .table-base {
     @apply w-full text-left text-sm;
@@ -65,7 +239,57 @@
   .table-base td {
     @apply border-b border-ink-100 px-4 py-3 align-middle;
   }
+  .table-base tbody tr {
+    @apply transition-colors duration-150;
+  }
   .table-base tbody tr:last-child td {
     @apply border-b-0;
+  }
+  /* Bloco de carregamento com brilho que percorre */
+  .skeleton {
+    @apply animate-shimmer rounded-md;
+    background-image: linear-gradient(
+      90deg,
+      var(--color-ink-100) 0%,
+      var(--color-ink-200) 50%,
+      var(--color-ink-100) 100%
+    );
+    background-size: 200% 100%;
+  }
+}
+
+/* Quem pede menos movimento no sistema não recebe animações */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------ Linhas e itens clicáveis
+ * Fundo levemente tingido de roxo e uma barra de destaque na borda esquerda.
+ */
+@layer components {
+  .row-link {
+    @apply cursor-pointer transition-colors duration-150 hover:bg-brand-50/60;
+  }
+  .row-link > td:first-child {
+    transition: box-shadow 0.15s ease;
+  }
+  .row-link:hover > td:first-child {
+    box-shadow: inset 3px 0 0 var(--color-accent);
+  }
+  .list-link {
+    @apply relative transition-colors duration-150 hover:bg-brand-50/60;
+  }
+  .list-link::before {
+    content: '';
+    @apply absolute inset-y-2 left-0 w-[3px] scale-y-0 rounded-full bg-accent transition-transform duration-200;
+  }
+  .list-link:hover::before {
+    @apply scale-y-100;
   }
 }

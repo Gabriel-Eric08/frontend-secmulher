@@ -78,7 +78,7 @@ export function EmpenhosPage() {
             onClick={() => setParam('situacao', s ?? '')}
             className={clsx(
               'rounded-full px-3 py-1.5 text-sm transition-colors',
-              status === s ? 'bg-brand-700 font-medium text-white' : 'bg-white text-ink-600 ring-1 ring-ink-200 hover:ring-ink-300',
+              status === s ? 'bg-accent font-medium text-white' : 'bg-surface text-ink-600 ring-1 ring-ink-200 hover:ring-ink-300',
             )}
           >
             {s ? COMMITMENT_STATUS_LABEL[s] : 'Todos'}

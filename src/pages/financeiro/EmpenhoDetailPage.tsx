@@ -10,7 +10,7 @@ import { formatDate, formatDateTime } from '@/lib/format'
 import { Card, DescriptionList, PageHeader } from '@/components/ui/Layout'
 import { Button, IconButton } from '@/components/ui/Button'
 import { ErrorState, ForbiddenState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { PageSkeleton } from '@/components/ui/Spinner'
 import { CodeTag, CommitmentStatusBadge } from '@/components/finance/FinanceUi'
 import { CommitmentFormModal, CommitmentMovementModal } from '@/components/finance/CommitmentModals'
 import { OperationFeed } from '@/components/finance/OperationFeed'
@@ -42,8 +42,8 @@ function Stage({
       <div className="relative flex items-start gap-3 sm:flex-col sm:gap-2">
         <span
           className={clsx(
-            'flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ring-4 ring-white',
-            done ? 'bg-brand-700 text-white' : active ? 'bg-brand-100 text-brand-800' : 'bg-ink-100 text-ink-400',
+            'flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ring-4 ring-surface',
+            done ? 'bg-accent text-white' : active ? 'bg-brand-100 text-brand-800' : 'bg-ink-100 text-ink-400',
           )}
         >
           {done ? <Check className="size-4" /> : formatPct(value, of)}
@@ -66,7 +66,7 @@ export function EmpenhoDetailPage() {
   const [editing, setEditing] = useState(false)
 
   if (!access.canRead) return <ForbiddenState message="Seu perfil não tem acesso ao módulo financeiro." />
-  if (detail.isPending) return <LoadingBlock />
+  if (detail.isPending) return <PageSkeleton />
   if (detail.isError) return <ErrorState error={detail.error} onRetry={() => detail.refetch()} />
 
   const { commitment: c, operations } = detail.data

@@ -128,7 +128,7 @@ export function DashboardPage() {
               <ul className="divide-y divide-ink-100">
                 {recentes.map((m) => (
                   <li key={m.id}>
-                    <Link to={`/mulheres/${m.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-ink-50">
+                    <Link to={`/mulheres/${m.id}`} className="list-link flex items-center gap-3 px-5 py-3">
                       <Avatar name={m.nome} size="sm" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-ink-800">{m.nome ?? <HiddenValue />}</p>
@@ -160,10 +160,10 @@ export function DashboardPage() {
             <ul className="divide-y divide-ink-100">
               {dinamicas.map((c) => (
                 <li key={c.id}>
-                  <Link to={`/cadastros/${c.id}`} className="flex items-center gap-3 px-5 py-3 text-sm hover:bg-ink-50">
+                  <Link to={`/cadastros/${c.id}`} className="list-link group flex items-center gap-3 px-5 py-3 text-sm">
                     <FolderKanban className="size-4 text-brand-600" />
                     <span className="flex-1 text-ink-800">{c.name}</span>
-                    <ArrowRight className="size-4 text-ink-400" />
+                    <ArrowRight className="size-4 text-ink-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-600" />
                   </Link>
                 </li>
               ))}

@@ -50,7 +50,7 @@ export function OperationRow({ op, onOpen, dense }: { op: FinanceOperation; onOp
       type="button"
       onClick={onOpen}
       className={clsx(
-        'group flex w-full items-center gap-3 text-left transition-colors hover:bg-ink-50',
+        'list-link group flex w-full items-center gap-3 text-left',
         dense ? 'px-4 py-2.5' : 'px-5 py-3',
       )}
     >
@@ -88,7 +88,7 @@ export function OperationFeed({ operations, dense }: { operations: FinanceOperat
       <div>
         {groups.map((g) => (
           <section key={g.date}>
-            <h3 className="sticky top-0 border-b border-ink-100 bg-white/95 px-5 py-1.5 text-[11px] font-semibold tracking-wider text-ink-400 uppercase backdrop-blur">
+            <h3 className="sticky top-0 border-b border-ink-100 bg-surface/95 px-5 py-1.5 text-[11px] font-semibold tracking-wider text-ink-400 uppercase backdrop-blur">
               {formatDate(g.date)}
             </h3>
             <ul className="divide-y divide-ink-100">
@@ -170,7 +170,7 @@ export function OperationDetailModal({ operation: op, onClose }: { operation: Fi
             <Link
               to={`/financeiro/empenhos/${op.commitmentId}`}
               onClick={onClose}
-              className="flex items-center justify-between rounded-lg border border-ink-200 px-4 py-2.5 text-sm hover:border-brand-300"
+              className="card-interactive group flex items-center justify-between rounded-lg border border-ink-200 px-4 py-2.5 text-sm"
             >
               <span>
                 Empenho <span className="font-mono font-medium text-ink-900">{op.commitmentNumber}</span>

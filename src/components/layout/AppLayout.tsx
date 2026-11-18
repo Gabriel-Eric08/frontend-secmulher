@@ -19,6 +19,8 @@ import {
 import { useAuth } from '@/auth/AuthContext'
 import { useCategories } from '@/queries/admin'
 import { Avatar } from '@/components/ui/Layout'
+import { TopProgressBar } from '@/components/ui/Spinner'
+import { ThemeToggle } from '@/theme/ThemeToggle'
 import { BrandMark } from './BrandMark'
 
 interface NavItem {
@@ -26,9 +28,12 @@ interface NavItem {
   label: string
   icon: React.ComponentType<{ className?: string }>
   end?: boolean
+  /** Outros caminhos que também marcam o item como ativo */
+  also?: string[]
 }
 
 function NavSection({ title, items, onNavigate }: { title?: string; items: NavItem[]; onNavigate: () => void }) {
+  const { pathname } = useLocation()
   if (items.length === 0) return null
   return (
     <div className="mb-5">
@@ -40,16 +45,20 @@ function NavSection({ title, items, onNavigate }: { title?: string; items: NavIt
               to={it.to}
               end={it.end}
               onClick={onNavigate}
-              className={({ isActive }) =>
-                clsx(
-                  'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors',
-                  isActive
+              className={({ isActive }) => {
+                const active = isActive || !!it.also?.some((p) => pathname.startsWith(p))
+                return clsx(
+                  'group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150',
+                  active
                     ? 'bg-brand-50 font-medium text-brand-800'
-                    : 'text-ink-600 hover:bg-ink-100 hover:text-ink-900',
+                    : 'text-ink-600 hover:translate-x-0.5 hover:bg-ink-100 hover:text-ink-900',
+                  // marcador lateral na cor de destaque
+                  'before:absolute before:top-1/2 before:left-0 before:h-4 before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-accent before:transition-transform before:duration-200',
+                  active ? 'before:scale-y-100' : 'before:scale-y-0',
                 )
-              }
+              }}
             >
-              <it.icon className="size-4 shrink-0" />
+              <it.icon className="size-4 shrink-0 transition-colors group-hover:text-brand-600" />
               <span className="truncate">{it.label}</span>
             </NavLink>
           </li>
@@ -77,7 +86,7 @@ export function AppLayout() {
 
   const financeiro: NavItem[] = financeAccess.canRead
     ? [
-        { to: '/financeiro', label: 'Ações e subações', icon: Wallet, end: true },
+        { to: '/financeiro', label: 'Ações e subações', icon: Wallet, end: true, also: ['/financeiro/acoes', '/financeiro/subacoes'] },
         { to: '/financeiro/empenhos', label: 'Empenhos', icon: FileText },
         { to: '/financeiro/operacoes', label: 'Operações', icon: ArrowLeftRight },
       ]
@@ -102,7 +111,7 @@ export function AppLayout() {
         <NavSection title="Administração" items={admin} onNavigate={close} />
       </div>
       <div className="border-t border-ink-200 p-3">
-        <Link to="/perfil" className="flex items-center gap-3 rounded-md p-2 hover:bg-ink-100">
+        <Link to="/perfil" className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-ink-100">
           <Avatar name={user?.name} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-ink-800">{user?.name}</p>
@@ -112,7 +121,7 @@ export function AppLayout() {
         </Link>
         <button
           onClick={logout}
-          className="mt-1 flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-ink-600 hover:bg-ink-100 hover:text-ink-900"
+          className="mt-1 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink-600 transition-colors hover:bg-red-50 hover:text-red-600"
         >
           <LogOut className="size-4" /> Sair
         </button>
@@ -122,46 +131,53 @@ export function AppLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <TopProgressBar />
       <div className="sticky top-0 z-30">
-      {/* Faixa institucional */}
-      <div className="bg-brand-900 text-[11px] font-medium tracking-wider text-brand-100 uppercase">
-        <div className="flex h-7 items-center px-4 sm:px-6">Governo do Estado de Pernambuco</div>
-      </div>
-
-      <header className="border-b border-ink-200 bg-white">
-        <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
-          <button
-            className="-ml-1 rounded p-1.5 text-ink-600 hover:bg-ink-100 lg:hidden"
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Abrir menu"
-          >
-            {open ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
-          <Link to="/" className="flex items-center gap-2.5">
-            <BrandMark />
-            <div className="leading-tight">
-              <p className="text-sm font-semibold text-brand-800">Secretaria da Mulher</p>
-              <p className="hidden text-xs text-ink-500 sm:block">Sistema de Atendimento</p>
-            </div>
-          </Link>
+        {/* Faixa institucional */}
+        <div className="bg-institutional text-[11px] font-medium tracking-wider text-white/75 uppercase">
+          <div className="flex h-7 items-center px-4 sm:px-6">Governo do Estado de Pernambuco</div>
         </div>
-      </header>
+
+        <header className="border-b border-ink-200 bg-surface/85 backdrop-blur-md">
+          <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
+            <button
+              className="-ml-1 rounded-lg p-1.5 text-ink-600 transition-colors hover:bg-ink-100 lg:hidden"
+              onClick={() => setOpen((v) => !v)}
+              aria-label="Abrir menu"
+            >
+              {open ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+            <Link to="/" className="group flex items-center gap-2.5">
+              <BrandMark className="transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3" />
+              <div className="leading-tight">
+                <p className="text-sm font-semibold text-brand-800">Secretaria da Mulher</p>
+                <p className="hidden text-xs text-ink-500 sm:block">Sistema de Atendimento</p>
+              </div>
+            </Link>
+            <div className="ml-auto flex items-center gap-1">
+              <ThemeToggle />
+            </div>
+          </div>
+        </header>
       </div>
 
       <div className="flex flex-1">
-        <aside className="sticky top-[5.25rem] hidden h-[calc(100vh-5.25rem)] w-64 shrink-0 border-r border-ink-200 bg-white lg:block">
+        <aside className="sticky top-[5.25rem] hidden h-[calc(100vh-5.25rem)] w-64 shrink-0 border-r border-ink-200 bg-surface lg:block">
           {sidebar}
         </aside>
 
         {open && (
           <div className="fixed inset-0 z-40 lg:hidden">
-            <div className="absolute inset-0 bg-ink-900/30" onClick={close} />
-            <aside className="absolute inset-y-0 left-0 w-72 bg-white shadow-xl">{sidebar}</aside>
+            <div className="absolute inset-0 animate-fade-in bg-overlay" onClick={close} />
+            <aside className="absolute inset-y-0 left-0 w-72 animate-drawer-in bg-surface shadow-(--shadow-pop)">
+              {sidebar}
+            </aside>
           </div>
         )}
 
         <main className="min-w-0 flex-1">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          {/* key no caminho: cada página entra com um fade suave */}
+          <div key={location.pathname} className="mx-auto max-w-7xl animate-fade-up px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             <Outlet />
           </div>
         </main>

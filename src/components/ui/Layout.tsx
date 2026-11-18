@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { ChevronRight } from 'lucide-react'
@@ -107,6 +107,7 @@ export function DescriptionList({ items }: { items: { label: string; value: Reac
   )
 }
 
+/** Abas com um indicador que desliza até a aba ativa. */
 export function Tabs<T extends string>({
   tabs,
   value,
@@ -116,8 +117,16 @@ export function Tabs<T extends string>({
   value: T
   onChange: (v: T) => void
 }) {
+  const listRef = useRef<HTMLDivElement>(null)
+  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null)
+
+  useLayoutEffect(() => {
+    const el = listRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')
+    if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth })
+  }, [value, tabs.length])
+
   return (
-    <div className="flex gap-1 overflow-x-auto border-b border-ink-200" role="tablist">
+    <div ref={listRef} className="relative flex gap-1 overflow-x-auto border-b border-ink-200" role="tablist">
       {tabs.map((t) => (
         <button
           key={t.value}
@@ -125,32 +134,54 @@ export function Tabs<T extends string>({
           aria-selected={value === t.value}
           onClick={() => onChange(t.value)}
           className={clsx(
-            '-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors',
-            value === t.value
-              ? 'border-brand-700 text-brand-800'
-              : 'border-transparent text-ink-500 hover:text-ink-800',
+            'my-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
+            value === t.value ? 'text-brand-800' : 'text-ink-500 hover:bg-ink-100 hover:text-ink-800',
           )}
         >
           {t.label}
           {t.count != null && (
-            <span className="rounded-full bg-ink-100 px-1.5 py-px text-xs text-ink-600">{t.count}</span>
+            <span
+              className={clsx(
+                'rounded-full px-1.5 py-px text-xs tabular-nums transition-colors',
+                value === t.value ? 'bg-brand-100 text-brand-800' : 'bg-ink-100 text-ink-600',
+              )}
+            >
+              {t.count}
+            </span>
           )}
         </button>
       ))}
+      {indicator && (
+        <span
+          className="absolute bottom-0 h-0.5 rounded-full bg-accent transition-all duration-300 ease-out"
+          style={{ left: indicator.left, width: indicator.width }}
+          aria-hidden
+        />
+      )}
     </div>
   )
 }
 
 export function StatCard({ label, value, hint, icon, to }: { label: string; value: ReactNode; hint?: ReactNode; icon?: ReactNode; to?: string }) {
   const content = (
-    <div className="card flex items-start justify-between gap-3 p-5 transition-colors hover:border-brand-300">
-      <div>
+    <div className={clsx('card group flex items-start justify-between gap-3 p-5', to && 'card-interactive')}>
+      <div className="min-w-0">
         <p className="text-sm text-ink-500">{label}</p>
-        <p className="mt-1 text-2xl font-semibold text-ink-900 tabular-nums">{value}</p>
+        <p className="mt-1 truncate text-2xl font-semibold tracking-tight text-ink-900 tabular-nums">{value}</p>
         {hint && <p className="mt-1 text-xs text-ink-500">{hint}</p>}
       </div>
-      {icon && <div className="rounded-md bg-brand-50 p-2 text-brand-700">{icon}</div>}
+      {icon && (
+        <div className="rounded-xl bg-brand-50 p-2.5 text-brand-700 transition-all duration-200 group-hover:scale-105 group-hover:bg-accent group-hover:text-white">
+          {icon}
+        </div>
+      )}
     </div>
   )
-  return to ? <Link to={to}>{content}</Link> : content
+  return to ? (
+    <Link to={to} className="block rounded-xl">
+      {content}
+    </Link>
+  ) : (
+    content
+  )
 }

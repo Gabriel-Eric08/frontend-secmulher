@@ -93,7 +93,7 @@ const METHOD_TONE: Record<FinanceOperationMethod, string> = {
   COMMITMENT: 'bg-amber-50 text-amber-700',
   COMMITMENT_CANCELLATION: 'bg-red-50 text-red-600',
   LIQUIDATION: 'bg-brand-100 text-brand-700',
-  PAYMENT: 'bg-brand-700 text-white',
+  PAYMENT: 'bg-accent text-white',
 }
 
 export function MethodIcon({ method, size = 'md' }: { method: FinanceOperationMethod; size?: 'sm' | 'md' }) {

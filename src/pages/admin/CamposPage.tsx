@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/ui/Layout'
 import { Badge } from '@/components/ui/Badge'
 import { Button, ButtonLink, IconButton } from '@/components/ui/Button'
 import { Alert, EmptyState, ErrorState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { LoadingBlock, PageSkeleton } from '@/components/ui/Spinner'
 import { useConfirm } from '@/components/ui/Confirm'
 import { useToast } from '@/components/ui/Toast'
 import { FieldFormModal } from '@/components/admin/FieldFormModal'
@@ -22,7 +22,7 @@ export function CamposPage() {
   const toast = useToast()
   const [modal, setModal] = useState<{ open: boolean; field?: CategoryField | null }>({ open: false })
 
-  if (category.isPending) return <LoadingBlock />
+  if (category.isPending) return <PageSkeleton />
   if (category.isError) return <ErrorState error={category.error} />
   if (category.data.entityType !== 'dynamic')
     return <Alert tone="warning">Somente categorias dinâmicas têm campos personalizados.</Alert>

@@ -21,7 +21,7 @@ export function useAsOfDate(): [string | undefined, (d: string | undefined) => v
 /** Seletor compacto "Posição em". */
 export function AsOfDatePicker({ value, onChange }: { value?: string; onChange: (d: string | undefined) => void }) {
   return (
-    <div className="flex h-10 items-center gap-2 rounded-md border border-ink-300 bg-white pr-1 pl-3 text-sm focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-100">
+    <div className="flex h-10 items-center gap-2 rounded-lg border border-ink-300 bg-surface pr-1 pl-3 text-sm transition-[border-color,box-shadow] hover:border-ink-400 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/15">
       <CalendarClock className="size-4 shrink-0 text-ink-400" />
       <label htmlFor="asof" className="text-ink-500">
         Posição em

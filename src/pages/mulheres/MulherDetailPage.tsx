@@ -9,7 +9,7 @@ import { Avatar, DescriptionList, PageHeader } from '@/components/ui/Layout'
 import { Badge, HiddenValue } from '@/components/ui/Badge'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { ErrorState, ForbiddenState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { PageSkeleton } from '@/components/ui/Spinner'
 import { useConfirm } from '@/components/ui/Confirm'
 import { useToast } from '@/components/ui/Toast'
 import { RecordWorkspace } from '@/components/records/RecordWorkspace'
@@ -25,7 +25,7 @@ export function MulherDetailPage() {
   const mulheresCategoryId = useMulheresCategoryId()
 
   if (!access.canRead) return <ForbiddenState />
-  if (overview.isPending) return <LoadingBlock />
+  if (overview.isPending) return <PageSkeleton />
   if (overview.isError) return <ErrorState error={overview.error} onRetry={() => overview.refetch()} />
 
   const { record: m, activities, files } = overview.data

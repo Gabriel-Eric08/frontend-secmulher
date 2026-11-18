@@ -75,7 +75,7 @@ export function FuncionariasPage() {
               </thead>
               <tbody>
                 {rows.map((u) => (
-                  <tr key={u.id} className="cursor-pointer hover:bg-ink-50" onClick={() => navigate(`/admin/funcionarias/${u.id}`)}>
+                  <tr key={u.id} className="row-link" onClick={() => navigate(`/admin/funcionarias/${u.id}`)}>
                     <td>
                       <div className="flex items-center gap-3">
                         <Avatar name={u.name} size="sm" />

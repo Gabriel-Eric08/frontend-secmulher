@@ -5,6 +5,7 @@ import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { PerfilPage } from '@/pages/PerfilPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { RouteErrorPage } from '@/pages/RouteErrorPage'
 import { MulheresListPage } from '@/pages/mulheres/MulheresListPage'
 import { MulherFormPage } from '@/pages/mulheres/MulherFormPage'
 import { MulherDetailPage } from '@/pages/mulheres/MulherDetailPage'
@@ -26,13 +27,15 @@ import { EmpenhoDetailPage } from '@/pages/financeiro/EmpenhoDetailPage'
 import { OperacoesPage } from '@/pages/financeiro/OperacoesPage'
 
 const router = createBrowserRouter([
-  { path: '/login', element: <LoginPage /> },
+  { path: '/login', element: <LoginPage />, errorElement: <RouteErrorPage fullScreen /> },
   {
     element: <RequireAuth />,
+    errorElement: <RouteErrorPage fullScreen />,
     children: [
       {
         element: <AppLayout />,
-        children: [
+        // erro numa página mantém o menu e o cabeçalho
+        children: [{ errorElement: <RouteErrorPage />, children: [
           { index: true, element: <DashboardPage /> },
           { path: 'perfil', element: <PerfilPage /> },
 
@@ -68,7 +71,7 @@ const router = createBrowserRouter([
           },
 
           { path: '*', element: <NotFoundPage /> },
-        ],
+        ] }],
       },
     ],
   },

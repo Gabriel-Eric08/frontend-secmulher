@@ -87,9 +87,18 @@ export function typeStyles(t: Pick<ActivityTypeSummary, 'color'> | null | undefi
   const hex = c.length === 4 ? `#${c[1]}${c[1]}${c[2]}${c[2]}${c[3]}${c[3]}` : c.slice(0, 7)
   return {
     icon: { backgroundColor: hex, color: '#fff' } satisfies CSSProperties,
-    chip: { backgroundColor: `${hex}14`, color: hex, boxShadow: `inset 0 0 0 1px ${hex}40` } satisfies CSSProperties,
+    // no tema escuro (--type-lighten/--type-tint em index.css) o texto clareia e o fundo fica mais presente
+    chip: {
+      backgroundColor: `color-mix(in srgb, ${hex} var(--type-tint), transparent)`,
+      color: `color-mix(in oklab, ${hex}, white var(--type-lighten))`,
+      boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${hex} 30%, transparent)`,
+    } satisfies CSSProperties,
     accent: { borderLeftColor: hex } satisfies CSSProperties,
-    ring: { borderColor: hex, boxShadow: `0 0 0 1px ${hex}`, backgroundColor: `${hex}0d` } satisfies CSSProperties,
+    ring: {
+      borderColor: hex,
+      boxShadow: `0 0 0 1px ${hex}`,
+      backgroundColor: `color-mix(in srgb, ${hex} var(--type-tint), transparent)`,
+    } satisfies CSSProperties,
   }
 }
 

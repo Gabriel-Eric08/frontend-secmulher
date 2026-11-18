@@ -9,7 +9,7 @@ import { DescriptionList, PageHeader } from '@/components/ui/Layout'
 import { HiddenValue } from '@/components/ui/Badge'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { ErrorState, ForbiddenState } from '@/components/ui/States'
-import { LoadingBlock } from '@/components/ui/Spinner'
+import { PageSkeleton } from '@/components/ui/Spinner'
 import { useConfirm } from '@/components/ui/Confirm'
 import { useToast } from '@/components/ui/Toast'
 import { DynamicValue } from '@/components/dynamic/DynamicField'
@@ -28,7 +28,7 @@ export function CadastroDetailPage() {
   const del = useDeleteEntity()
 
   if (!access.canRead) return <ForbiddenState />
-  if (overview.isPending || fields.isPending) return <LoadingBlock />
+  if (overview.isPending || fields.isPending) return <PageSkeleton />
   if (overview.isError) return <ErrorState error={overview.error} onRetry={() => overview.refetch()} />
 
   const { record: e, activities, files } = overview.data

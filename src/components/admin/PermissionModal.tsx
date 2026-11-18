@@ -36,13 +36,13 @@ function ColumnPicker({
       <p className="mb-3 text-xs text-ink-500">{description}</p>
       <div className="mb-3 flex gap-4 text-sm">
         <label className="flex items-center gap-2">
-          <input type="radio" className="accent-brand-700" checked={!restricted} onChange={() => onChange(null)} />
+          <input type="radio" className="accent-accent" checked={!restricted} onChange={() => onChange(null)} />
           {allLabel}
         </label>
         <label className="flex items-center gap-2">
           <input
             type="radio"
-            className="accent-brand-700"
+            className="accent-accent"
             checked={restricted}
             onChange={() => onChange(options.map((o) => o.column))}
           />
