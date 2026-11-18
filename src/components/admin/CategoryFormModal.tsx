@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError, type Category, type CategoryRequest } from '@/api'
-import { MULHERES_TABLE } from '@/auth/access'
+import { FINANCE_TABLE, MULHERES_TABLE } from '@/auth/access'
 import { useSaveCategory } from '@/queries/admin'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
@@ -19,6 +19,13 @@ export const MULHERES_CATEGORY_PRESET: CategoryRequest = {
   name: 'Mulheres atendidas',
   entityType: 'native',
   tableReference: MULHERES_TABLE,
+  isActive: true,
+}
+
+export const FINANCE_CATEGORY_PRESET: CategoryRequest = {
+  name: 'Financeiro',
+  entityType: 'native',
+  tableReference: FINANCE_TABLE,
   isActive: true,
 }
 
@@ -118,7 +125,7 @@ export function CategoryFormModal({
             htmlFor="c-ref"
             required
             error={errors.tableReference}
-            hint={form.entityType === 'native' ? `Mulheres atendidas: "${MULHERES_TABLE}"` : 'Identificador interno.'}
+            hint={form.entityType === 'native' ? `Mulheres: "${MULHERES_TABLE}" · Financeiro: "${FINANCE_TABLE}"` : 'Identificador interno.'}
           >
             <Input
               id="c-ref"

@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
-import { AlertTriangle, ArrowRight, FolderKanban, Settings2, UserPlus, Users, UsersRound } from 'lucide-react'
+import { AlertTriangle, ArrowRight, FolderKanban, Settings2, UserPlus, Users, UsersRound, Wallet } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { MULHERES_TABLE } from '@/auth/access'
 import { useCategories, useUsers } from '@/queries/admin'
 import { useMulheres } from '@/queries/records'
+import { useFinanceDashboard } from '@/queries/finance'
+import { formatMoneyCompact, formatPct } from '@/lib/finance'
 import { formatRelative } from '@/lib/format'
 import { Card, PageHeader, StatCard, Avatar } from '@/components/ui/Layout'
 import { Badge, HiddenValue } from '@/components/ui/Badge'
@@ -17,7 +19,8 @@ function greeting() {
 }
 
 export function DashboardPage() {
-  const { user, isAdmin, mulheresAccess } = useAuth()
+  const { user, isAdmin, mulheresAccess, financeAccess } = useAuth()
+  const finance = useFinanceDashboard(undefined, financeAccess.canRead)
   const mulheres = useMulheres(mulheresAccess.canRead)
   const categories = useCategories()
   const users = useUsers(isAdmin)
@@ -78,6 +81,15 @@ export function DashboardPage() {
             hint={list.length ? `${Math.round((emRisco / list.length) * 100)}% do total` : undefined}
             icon={<AlertTriangle className="size-5" />}
             to="/mulheres?risco=1"
+          />
+        )}
+        {financeAccess.canRead && (
+          <StatCard
+            label="Disponível no orçamento"
+            value={finance.data ? formatMoneyCompact(finance.data.availableAmount) : '…'}
+            hint={finance.data ? `${formatPct(finance.data.committedAmount, finance.data.totalAmount)} empenhado de ${formatMoneyCompact(finance.data.totalAmount)}` : undefined}
+            icon={<Wallet className="size-5" />}
+            to="/financeiro"
           />
         )}
         <StatCard

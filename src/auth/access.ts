@@ -7,6 +7,9 @@ export const levelRank = (l: ConfidentialityLevel) => CONFIDENTIALITY_ORDER.inde
 /** Tabela nativa das mulheres atendidas no backend. */
 export const MULHERES_TABLE = 'clients'
 
+/** Tabela nativa do módulo financeiro: a permissão nessa categoria vale para todo o financeiro. */
+export const FINANCE_TABLE = 'finance_actions'
+
 /**
  * Acesso efetivo do usuário a uma categoria. É só para a interface (esconder botões,
  * desabilitar campos): a autorização de verdade é sempre do backend.

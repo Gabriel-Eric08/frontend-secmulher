@@ -18,6 +18,12 @@ import { CategoriasPage } from '@/pages/admin/CategoriasPage'
 import { CamposPage } from '@/pages/admin/CamposPage'
 import { PermissoesPage } from '@/pages/admin/PermissoesPage'
 import { TiposRegistroPage } from '@/pages/admin/TiposRegistroPage'
+import { FinanceiroPage } from '@/pages/financeiro/FinanceiroPage'
+import { AcaoDetailPage } from '@/pages/financeiro/AcaoDetailPage'
+import { SubacaoDetailPage } from '@/pages/financeiro/SubacaoDetailPage'
+import { EmpenhosPage } from '@/pages/financeiro/EmpenhosPage'
+import { EmpenhoDetailPage } from '@/pages/financeiro/EmpenhoDetailPage'
+import { OperacoesPage } from '@/pages/financeiro/OperacoesPage'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -40,6 +46,13 @@ const router = createBrowserRouter([
           { path: 'cadastros/:categoryId/:id', element: <CadastroDetailPage /> },
           { path: 'cadastros/:categoryId/:id/editar', element: <CadastroFormPage /> },
           { path: 'registros/:id', element: <RegistroRedirect /> },
+
+          { path: 'financeiro', element: <FinanceiroPage /> },
+          { path: 'financeiro/acoes/:id', element: <AcaoDetailPage /> },
+          { path: 'financeiro/subacoes/:id', element: <SubacaoDetailPage /> },
+          { path: 'financeiro/empenhos', element: <EmpenhosPage /> },
+          { path: 'financeiro/empenhos/:id', element: <EmpenhoDetailPage /> },
+          { path: 'financeiro/operacoes', element: <OperacoesPage /> },
 
           {
             path: 'admin',

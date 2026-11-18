@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import clsx from 'clsx'
 import {
+  ArrowLeftRight,
+  FileText,
   FolderKanban,
   LayoutDashboard,
   LogOut,
@@ -11,6 +13,7 @@ import {
   UserCircle2,
   Users,
   UsersRound,
+  Wallet,
   X,
 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
@@ -57,7 +60,7 @@ function NavSection({ title, items, onNavigate }: { title?: string; items: NavIt
 }
 
 export function AppLayout() {
-  const { user, isAdmin, mulheresAccess, logout } = useAuth()
+  const { user, isAdmin, mulheresAccess, financeAccess, logout } = useAuth()
   const categories = useCategories()
   const [open, setOpen] = useState(false)
   const location = useLocation()
@@ -71,6 +74,14 @@ export function AppLayout() {
     .filter((c) => c.entityType === 'dynamic' && c.isActive)
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
     .map((c) => ({ to: `/cadastros/${c.id}`, label: c.name, icon: FolderKanban }))
+
+  const financeiro: NavItem[] = financeAccess.canRead
+    ? [
+        { to: '/financeiro', label: 'Ações e subações', icon: Wallet, end: true },
+        { to: '/financeiro/empenhos', label: 'Empenhos', icon: FileText },
+        { to: '/financeiro/operacoes', label: 'Operações', icon: ArrowLeftRight },
+      ]
+    : []
 
   const admin: NavItem[] = isAdmin
     ? [
@@ -87,6 +98,7 @@ export function AppLayout() {
       <div className="flex-1 overflow-y-auto px-3 py-5">
         <NavSection items={main} onNavigate={close} />
         <NavSection title="Cadastros" items={cadastros} onNavigate={close} />
+        <NavSection title="Financeiro" items={financeiro} onNavigate={close} />
         <NavSection title="Administração" items={admin} onNavigate={close} />
       </div>
       <div className="border-t border-ink-200 p-3">

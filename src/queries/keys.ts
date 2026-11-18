@@ -1,4 +1,4 @@
-import type { RecordKind, SearchRequest, UUID } from '@/api'
+import type { CommitmentFilters, OperationFilters, PeriodFilter, RecordKind, SearchRequest, UUID } from '@/api'
 
 /** Chaves centralizadas do React Query: facilita invalidação consistente. */
 export const qk = {
@@ -41,5 +41,19 @@ export const qk = {
     overview: (kind: RecordKind, id: UUID) => ['record', kind, id, 'overview'] as const,
     activities: (kind: RecordKind, id: UUID) => ['record', kind, id, 'activities'] as const,
     files: (kind: RecordKind, id: UUID) => ['record', kind, id, 'files'] as const,
+  },
+
+  /** Tudo do financeiro fica sob ['finance']: uma operação muda saldos em várias telas. */
+  finance: {
+    all: ['finance'] as const,
+    dashboard: (date?: string) => ['finance', 'dashboard', { date }] as const,
+    action: (id: UUID, date?: string) => ['finance', 'action', id, { date }] as const,
+    actionHistory: (id: UUID, period?: PeriodFilter) => ['finance', 'action', id, 'history', period ?? {}] as const,
+    subAction: (id: UUID, date?: string) => ['finance', 'sub-action', id, { date }] as const,
+    subActionHistory: (id: UUID, period?: PeriodFilter) =>
+      ['finance', 'sub-action', id, 'history', period ?? {}] as const,
+    operations: (filters?: OperationFilters) => ['finance', 'operations', filters ?? {}] as const,
+    commitments: (filters?: CommitmentFilters) => ['finance', 'commitments', filters ?? {}] as const,
+    commitment: (id: UUID) => ['finance', 'commitment', id] as const,
   },
 }

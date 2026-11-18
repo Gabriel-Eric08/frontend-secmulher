@@ -24,13 +24,15 @@ src/
 ├── queries/        # Hooks React Query (cache, invalidação) sobre a camada api/
 ├── auth/           # AuthContext (login, /auth/me, expiração), guards de rota, regras de acesso
 ├── lib/format.ts   # Datas, telefone, rótulos em português (atividades, sigilo, operadores…)
+├── lib/finance.ts  # Moeda (BRL), somas em centavos, rótulos de operações, situação de empenho
 ├── components/
 │   ├── ui/         # Botões, formulários, modal, confirmação, toast, badges, estados
 │   ├── layout/     # AppLayout (faixa institucional, menu lateral)
 │   ├── records/    # Linha do tempo, documentos, atendimento manual (mulheres e cadastros)
 │   ├── dynamic/    # Campo dinâmico por tipo e construtor de filtros da busca
+│   ├── finance/    # Barra de execução, input monetário, modais de operação, feed e histórico
 │   └── admin/      # Modais de funcionária, permissão, categoria e campo
-└── pages/          # Painel, mulheres, cadastros (categorias dinâmicas), admin, perfil
+└── pages/          # Painel, mulheres, cadastros (categorias dinâmicas), financeiro, admin, perfil
 ```
 
 ## Rotas
@@ -40,6 +42,11 @@ src/
 | `/` | Painel |
 | `/mulheres`, `/mulheres/nova`, `/mulheres/:id`, `/mulheres/:id/editar` | Mulheres atendidas (`/clients`) |
 | `/cadastros/:categoryId[/novo|/:id|/:id/editar]` | Categorias dinâmicas (`/dynamic-entities`) |
+| `/financeiro` | Painel financeiro: totais e ações (`?data=` mostra a posição em um dia) |
+| `/financeiro/acoes/:id` | Ação: subações, empenhos, histórico; distribuição, TAC e transferências |
+| `/financeiro/subacoes/:id` | Subação: execução, empenhos e histórico |
+| `/financeiro/empenhos[/:id]` | Empenhos; liquidação, pagamento e anulação |
+| `/financeiro/operacoes` | Histórico geral de operações (filtros na URL) |
 | `/admin/funcionarias[/:id]` | Usuárias, permissões e auditoria |
 | `/admin/categorias[/:id/campos]` | Categorias e campos personalizados |
 | `/admin/categorias/:id/tipos` | Tipos de registro da linha do tempo da categoria |

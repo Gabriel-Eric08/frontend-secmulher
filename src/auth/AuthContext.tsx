@@ -4,7 +4,7 @@ import { authApi, type CategoryAccess, type LoginRequest, type User, type UUID }
 import { setUnauthorizedHandler } from '@/api/http'
 import { tokenStorage } from '@/api/tokenStorage'
 import { qk } from '@/queries/keys'
-import { MULHERES_TABLE, resolveAccess, type Access } from './access'
+import { FINANCE_TABLE, MULHERES_TABLE, resolveAccess, type Access } from './access'
 
 type Status = 'loading' | 'authenticated' | 'anonymous'
 
@@ -18,6 +18,8 @@ interface AuthContextValue {
   refresh: () => Promise<unknown>
   /** Acesso efetivo à categoria das mulheres atendidas */
   mulheresAccess: Access
+  /** Acesso efetivo ao módulo financeiro (categoria nativa finance_actions) */
+  financeAccess: Access
   accessFor: (categoryId: UUID) => Access
 }
 
@@ -85,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       refresh: () => qc.invalidateQueries({ queryKey: qk.me }),
       mulheresAccess: resolveAccess(isAdmin, access, { tableReference: MULHERES_TABLE }),
+      financeAccess: resolveAccess(isAdmin, access, { tableReference: FINANCE_TABLE }),
       accessFor: (categoryId) => resolveAccess(isAdmin, access, { categoryId }),
     }
   }, [me.data, me.isPending, hasToken, login, logout, qc])
