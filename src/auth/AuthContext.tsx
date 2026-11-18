@@ -2,14 +2,17 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { authApi, type CategoryAccess, type LoginRequest, type User, type UUID } from '@/api'
 import { setUnauthorizedHandler } from '@/api/http'
-import { tokenStorage } from '@/api/tokenStorage'
+import { sessionExpiry, sessionNotice, tokenStorage } from '@/api/tokenStorage'
 import { qk } from '@/queries/keys'
 import { FINANCE_TABLE, MULHERES_TABLE, resolveAccess, type Access } from './access'
 
-type Status = 'loading' | 'authenticated' | 'anonymous'
+/** error = há token, mas não foi possível carregar /auth/me (servidor fora, erro 500…) */
+type Status = 'loading' | 'authenticated' | 'anonymous' | 'error'
 
 interface AuthContextValue {
   status: Status
+  /** Erro ao carregar a sessão, quando status = 'error' */
+  sessionError: unknown
   user: User | null
   isAdmin: boolean
   access: CategoryAccess[]
@@ -44,25 +47,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [qc])
 
   useEffect(() => {
-    setUnauthorizedHandler(() => {
+    setUnauthorizedHandler((detail) => {
+      sessionNotice.set(detail ? `Sessão encerrada pelo servidor: ${detail}` : 'Sua sessão foi encerrada. Entre novamente.')
       setHasToken(false)
       qc.clear()
     })
     return () => setUnauthorizedHandler(null)
   }, [qc])
 
-  // Expiração do token no relógio local: encerra a sessão sem esperar um 401
+  // Expiração do token no relógio local: encerra a sessão sem esperar um 401.
+  // Sem validade conhecida, não agenda nada (o backend responde 401 quando expirar).
   useEffect(() => {
     const session = tokenStorage.get()
     if (!hasToken || !session) return
-    const ms = new Date(session.expiresAt).getTime() - Date.now()
-    const t = setTimeout(logout, Math.max(ms, 0))
+    const exp = sessionExpiry(session)
+    if (exp === null) return
+    // setTimeout estoura acima de ~24,8 dias e dispararia na hora
+    const ms = Math.min(Math.max(exp - Date.now(), 0), 2 ** 31 - 1)
+    const t = setTimeout(() => {
+      sessionNotice.set('Sua sessão expirou. Entre novamente.')
+      logout()
+    }, ms)
     return () => clearTimeout(t)
   }, [hasToken, logout])
 
   const login = useCallback(
     async (credentials: LoginRequest) => {
       const res = await authApi.login(credentials)
+      sessionNotice.clear()
       tokenStorage.set({ token: res.token, expiresAt: res.expiresAt })
       qc.clear()
       const data = await qc.fetchQuery({ queryKey: qk.me, queryFn: authApi.me })
@@ -77,9 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const access = me.data?.access ?? []
     const isAdmin = !!user?.isGlobalAdmin
     let status: Status = 'anonymous'
-    if (hasToken) status = me.isPending ? 'loading' : user ? 'authenticated' : 'anonymous'
+    if (hasToken) status = me.isPending ? 'loading' : user ? 'authenticated' : me.isError ? 'error' : 'anonymous'
     return {
       status,
+      sessionError: me.error,
       user,
       isAdmin,
       access,
@@ -90,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       financeAccess: resolveAccess(isAdmin, access, { tableReference: FINANCE_TABLE }),
       accessFor: (categoryId) => resolveAccess(isAdmin, access, { categoryId }),
     }
-  }, [me.data, me.isPending, hasToken, login, logout, qc])
+  }, [me.data, me.isPending, me.isError, me.error, hasToken, login, logout, qc])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, LockKeyhole } from 'lucide-react'
 import { ApiError, errorMessage } from '@/api'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/Form'
 import { Alert } from '@/components/ui/States'
 import { ThemeToggle } from '@/theme/ThemeToggle'
+import { sessionNotice } from '@/api/tokenStorage'
 
 export function LoginPage() {
   const { login, status } = useAuth()
@@ -20,6 +21,9 @@ export function LoginPage() {
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  // motivo de a sessão anterior ter terminado (lido uma vez ao abrir a tela)
+  const [notice] = useState(() => sessionNotice.peek())
+  useEffect(() => sessionNotice.clear(), [])
 
   if (status === 'authenticated') return <Navigate to={from} replace />
 
@@ -76,7 +80,7 @@ export function LoginPage() {
             <p className="mt-1 text-sm text-ink-500">Use seu e-mail institucional e senha.</p>
 
             <form onSubmit={submit} className="mt-8 space-y-4">
-              {error && <Alert tone="danger">{error}</Alert>}
+              {error ? <Alert tone="danger">{error}</Alert> : notice && <Alert tone="warning">{notice}</Alert>}
               <Field label="E-mail" htmlFor="email">
                 <Input
                   id="email"

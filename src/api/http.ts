@@ -8,7 +8,8 @@ export const http = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-type UnauthorizedHandler = () => void
+/** Recebe a mensagem do backend (ex.: "Usuário inexistente ou inativo"). */
+type UnauthorizedHandler = (detail?: string) => void
 let onUnauthorized: UnauthorizedHandler | null = null
 
 /** O AuthProvider registra aqui o que fazer quando o token expira. */
@@ -29,7 +30,7 @@ http.interceptors.response.use(
     const isLogin = err?.config?.url?.includes('/auth/login')
     if (apiError.isUnauthorized && !isLogin) {
       tokenStorage.clear()
-      onUnauthorized?.()
+      onUnauthorized?.(apiError.problem?.detail)
     }
     return Promise.reject(apiError)
   },
