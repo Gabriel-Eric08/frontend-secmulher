@@ -25,6 +25,14 @@ import { SubacaoDetailPage } from '@/pages/financeiro/SubacaoDetailPage'
 import { EmpenhosPage } from '@/pages/financeiro/EmpenhosPage'
 import { EmpenhoDetailPage } from '@/pages/financeiro/EmpenhoDetailPage'
 import { OperacoesPage } from '@/pages/financeiro/OperacoesPage'
+import { AgendaPage } from '@/pages/frotas/AgendaPage'
+import { TripFormPage } from '@/pages/frotas/TripFormPage'
+import { TripDetailPage } from '@/pages/frotas/TripDetailPage'
+import { MotoristasPage } from '@/pages/frotas/MotoristasPage'
+import { MotoristaDetailPage } from '@/pages/frotas/MotoristaDetailPage'
+import { VeiculosPage } from '@/pages/frotas/VeiculosPage'
+import { VeiculoDetailPage } from '@/pages/frotas/VeiculoDetailPage'
+import { MinhaAgendaPage } from '@/pages/frotas/MinhaAgendaPage'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage />, errorElement: <RouteErrorPage fullScreen /> },
@@ -56,6 +64,16 @@ const router = createBrowserRouter([
           { path: 'financeiro/empenhos', element: <EmpenhosPage /> },
           { path: 'financeiro/empenhos/:id', element: <EmpenhoDetailPage /> },
           { path: 'financeiro/operacoes', element: <OperacoesPage /> },
+
+          { path: 'frotas', element: <AgendaPage /> },
+          { path: 'frotas/minha-agenda', element: <MinhaAgendaPage /> },
+          { path: 'frotas/viagens/nova', element: <TripFormPage /> },
+          { path: 'frotas/viagens/:id', element: <TripDetailPage /> },
+          { path: 'frotas/viagens/:id/editar', element: <TripFormPage /> },
+          { path: 'frotas/motoristas', element: <MotoristasPage /> },
+          { path: 'frotas/motoristas/:id', element: <MotoristaDetailPage /> },
+          { path: 'frotas/veiculos', element: <VeiculosPage /> },
+          { path: 'frotas/veiculos/:id', element: <VeiculoDetailPage /> },
 
           {
             path: 'admin',

@@ -11,7 +11,7 @@ import { Alert, EmptyState, ErrorState } from '@/components/ui/States'
 import { LoadingBlock } from '@/components/ui/Spinner'
 import { useConfirm } from '@/components/ui/Confirm'
 import { useToast } from '@/components/ui/Toast'
-import { CategoryFormModal, FINANCE_CATEGORY_PRESET, MULHERES_CATEGORY_PRESET } from '@/components/admin/CategoryFormModal'
+import { CategoryFormModal, FINANCE_CATEGORY_PRESET, FLEET_CATEGORY_PRESET, MULHERES_CATEGORY_PRESET } from '@/components/admin/CategoryFormModal'
 
 export function CategoriasPage() {
   const categories = useCategories()
@@ -27,6 +27,9 @@ export function CategoriasPage() {
       setParams({}, { replace: true })
     } else if (params.get('setup') === 'financeiro') {
       setModal({ open: true, preset: FINANCE_CATEGORY_PRESET })
+      setParams({}, { replace: true })
+    } else if (params.get('setup') === 'frotas') {
+      setModal({ open: true, preset: FLEET_CATEGORY_PRESET })
       setParams({}, { replace: true })
     }
   }, [params, setParams])

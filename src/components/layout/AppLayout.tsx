@@ -3,6 +3,14 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import clsx from 'clsx'
 import {
   ArrowLeftRight,
+  CalendarCheck2,
+  CalendarRange,
+  Car,
+  ChevronRight,
+  LayoutGrid,
+  SlidersHorizontal,
+  CarFront,
+  IdCard,
   FileText,
   FolderKanban,
   LayoutDashboard,
@@ -21,6 +29,7 @@ import { useCategories } from '@/queries/admin'
 import { Avatar } from '@/components/ui/Layout'
 import { TopProgressBar } from '@/components/ui/Spinner'
 import { ThemeToggle } from '@/theme/ThemeToggle'
+import { useIsDriver } from '@/queries/fleet'
 import { BrandMark } from './BrandMark'
 
 interface NavItem {
@@ -32,44 +41,130 @@ interface NavItem {
   also?: string[]
 }
 
-function NavSection({ title, items, onNavigate }: { title?: string; items: NavItem[]; onNavigate: () => void }) {
+const isItemActive = (it: NavItem, pathname: string) =>
+  (it.end ? pathname === it.to : pathname === it.to || pathname.startsWith(`${it.to}/`)) ||
+  !!it.also?.some((p) => pathname.startsWith(p))
+
+function NavItems({ items, onNavigate }: { items: NavItem[]; onNavigate: () => void }) {
   const { pathname } = useLocation()
-  if (items.length === 0) return null
   return (
-    <div className="mb-5">
-      {title && <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-wider text-ink-400 uppercase">{title}</p>}
-      <ul className="space-y-0.5">
-        {items.map((it) => (
+    <ul className="space-y-0.5">
+      {items.map((it) => {
+        const active = isItemActive(it, pathname)
+        return (
           <li key={it.to}>
             <NavLink
               to={it.to}
               end={it.end}
               onClick={onNavigate}
-              className={({ isActive }) => {
-                const active = isActive || !!it.also?.some((p) => pathname.startsWith(p))
-                return clsx(
-                  'group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150',
-                  active
-                    ? 'bg-brand-50 font-medium text-brand-800'
-                    : 'text-ink-600 hover:translate-x-0.5 hover:bg-ink-100 hover:text-ink-900',
-                  // marcador lateral na cor de destaque
-                  'before:absolute before:top-1/2 before:left-0 before:h-4 before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-accent before:transition-transform before:duration-200',
-                  active ? 'before:scale-y-100' : 'before:scale-y-0',
-                )
-              }}
+              className={clsx(
+                'group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150',
+                active
+                  ? 'bg-brand-50 font-medium text-brand-800'
+                  : 'text-ink-600 hover:translate-x-0.5 hover:bg-ink-100 hover:text-ink-900',
+                // marcador lateral na cor de destaque
+                'before:absolute before:top-1/2 before:left-0 before:h-4 before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-accent before:transition-transform before:duration-200',
+                active ? 'before:scale-y-100' : 'before:scale-y-0',
+              )}
             >
               <it.icon className="size-4 shrink-0 transition-colors group-hover:text-brand-600" />
               <span className="truncate">{it.label}</span>
             </NavLink>
           </li>
-        ))}
-      </ul>
+        )
+      })}
+    </ul>
+  )
+}
+
+const GROUP_KEY = (title: string) => `secmulher.nav.${title}`
+
+function readGroupPref(title: string): boolean | null {
+  try {
+    const v = localStorage.getItem(GROUP_KEY(title))
+    return v === null ? null : v === '1'
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Grupo expansível do menu (Financeiro, Frotas…). Abre sozinho quando a página atual
+ * pertence a ele; fora isso, lembra se foi deixado aberto ou fechado.
+ */
+function NavGroup({
+  title,
+  icon: Icon,
+  items,
+  onNavigate,
+}: {
+  title: string
+  icon: React.ComponentType<{ className?: string }>
+  items: NavItem[]
+  onNavigate: () => void
+}) {
+  const { pathname } = useLocation()
+  const containsActive = items.some((it) => isItemActive(it, pathname))
+  const [open, setOpen] = useState(() => containsActive || (readGroupPref(title) ?? false))
+
+  // navegou para uma página do grupo (ex.: por um link no meio da tela): abre
+  useEffect(() => {
+    if (containsActive) setOpen(true)
+  }, [containsActive])
+
+  if (items.length === 0) return null
+
+  const toggle = () => {
+    setOpen((v) => {
+      try {
+        localStorage.setItem(GROUP_KEY(title), v ? '0' : '1')
+      } catch {
+        /* sem armazenamento: só não lembra */
+      }
+      return !v
+    })
+  }
+
+  return (
+    <div className="mt-1">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        className={clsx(
+          'group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150',
+          containsActive && !open
+            ? 'bg-brand-50 font-medium text-brand-800'
+            : containsActive
+              ? 'font-medium text-ink-900'
+              : 'text-ink-600 hover:bg-ink-100 hover:text-ink-900',
+        )}
+      >
+        <Icon className={clsx('size-4 shrink-0 transition-colors', containsActive ? 'text-brand-600' : 'group-hover:text-brand-600')} />
+        <span className="flex-1 truncate text-left">{title}</span>
+        <ChevronRight className={clsx('size-4 shrink-0 text-ink-400 transition-transform duration-200', open && 'rotate-90')} />
+      </button>
+      {/* grid-rows 0fr → 1fr anima a altura sem precisar medir o conteúdo */}
+      <div
+        className={clsx(
+          'grid transition-[grid-template-rows,opacity] duration-250 ease-out',
+          open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+        )}
+        inert={!open}
+      >
+        <div className="overflow-hidden">
+          <div className="mt-0.5 ml-[1.15rem] border-l border-ink-200 pl-2">
+            <NavItems items={items} onNavigate={onNavigate} />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
 
 export function AppLayout() {
-  const { user, isAdmin, mulheresAccess, financeAccess, logout } = useAuth()
+  const { user, isAdmin, mulheresAccess, financeAccess, fleetAccess, logout } = useAuth()
+  const isDriver = useIsDriver()
   const categories = useCategories()
   const [open, setOpen] = useState(false)
   const location = useLocation()
@@ -86,11 +181,23 @@ export function AppLayout() {
 
   const financeiro: NavItem[] = financeAccess.canRead
     ? [
-        { to: '/financeiro', label: 'Ações e subações', icon: Wallet, end: true, also: ['/financeiro/acoes', '/financeiro/subacoes'] },
+        { to: '/financeiro', label: 'Ações e subações', icon: LayoutGrid, end: true, also: ['/financeiro/acoes', '/financeiro/subacoes'] },
         { to: '/financeiro/empenhos', label: 'Empenhos', icon: FileText },
         { to: '/financeiro/operacoes', label: 'Operações', icon: ArrowLeftRight },
       ]
     : []
+
+  const frotas: NavItem[] = [
+    ...(fleetAccess.canRead
+      ? [
+          { to: '/frotas', label: 'Agenda de viagens', icon: CalendarRange, end: true, also: ['/frotas/viagens'] },
+          { to: '/frotas/motoristas', label: 'Motoristas', icon: IdCard },
+          { to: '/frotas/veiculos', label: 'Veículos', icon: Car },
+        ]
+      : []),
+    // o motorista vinculado vê a própria agenda mesmo sem permissão em Frotas
+    ...(isDriver ? [{ to: '/frotas/minha-agenda', label: 'Minha agenda', icon: CalendarCheck2 }] : []),
+  ]
 
   const admin: NavItem[] = isAdmin
     ? [
@@ -105,10 +212,13 @@ export function AppLayout() {
   const sidebar = (
     <nav className="flex h-full flex-col">
       <div className="flex-1 overflow-y-auto px-3 py-5">
-        <NavSection items={main} onNavigate={close} />
-        <NavSection title="Cadastros" items={cadastros} onNavigate={close} />
-        <NavSection title="Financeiro" items={financeiro} onNavigate={close} />
-        <NavSection title="Administração" items={admin} onNavigate={close} />
+        <NavItems items={main} onNavigate={close} />
+        <div className="mt-4 border-t border-ink-100 pt-3">
+          <NavGroup title="Cadastros" icon={FolderKanban} items={cadastros} onNavigate={close} />
+          <NavGroup title="Financeiro" icon={Wallet} items={financeiro} onNavigate={close} />
+          <NavGroup title="Frotas" icon={CarFront} items={frotas} onNavigate={close} />
+          <NavGroup title="Administração" icon={SlidersHorizontal} items={admin} onNavigate={close} />
+        </div>
       </div>
       <div className="border-t border-ink-200 p-3">
         <Link to="/perfil" className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-ink-100">

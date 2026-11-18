@@ -1,4 +1,4 @@
-import type { CommitmentFilters, OperationFilters, PeriodFilter, RecordKind, SearchRequest, UUID } from '@/api'
+import type { CommitmentFilters, OperationFilters, PeriodFilter, RecordKind, SearchRequest, TripFilters, UUID } from '@/api'
 
 /** Chaves centralizadas do React Query: facilita invalidação consistente. */
 export const qk = {
@@ -55,5 +55,18 @@ export const qk = {
     operations: (filters?: OperationFilters) => ['finance', 'operations', filters ?? {}] as const,
     commitments: (filters?: CommitmentFilters) => ['finance', 'commitments', filters ?? {}] as const,
     commitment: (id: UUID) => ['finance', 'commitment', id] as const,
+  },
+
+  /** Tudo de frotas sob ['fleet']: agendar/iniciar/concluir muda agenda, disponibilidade e odômetro. */
+  fleet: {
+    all: ['fleet'] as const,
+    drivers: ['fleet', 'drivers'] as const,
+    driver: (id: UUID) => ['fleet', 'drivers', id] as const,
+    vehicles: ['fleet', 'vehicles'] as const,
+    vehicle: (id: UUID) => ['fleet', 'vehicles', id] as const,
+    trips: (filters?: TripFilters) => ['fleet', 'trips', filters ?? {}] as const,
+    mine: (period?: { from?: string; to?: string }) => ['fleet', 'mine', period ?? {}] as const,
+    trip: (id: UUID) => ['fleet', 'trip', id] as const,
+    availability: (start: string, end: string) => ['fleet', 'availability', start, end] as const,
   },
 }
