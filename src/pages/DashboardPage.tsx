@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
-import { AlertTriangle, ArrowRight, FolderKanban, Settings2, UserPlus, Users, UsersRound, Wallet } from 'lucide-react'
+import { AlertTriangle, ArrowRight, FolderKanban, Landmark, Settings2, UserPlus, Users, UsersRound, Wallet } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { MULHERES_TABLE } from '@/auth/access'
 import { useCategories, useUsers } from '@/queries/admin'
 import { useMulheres } from '@/queries/records'
 import { useFinanceDashboard } from '@/queries/finance'
+import { useAmendmentSummary } from '@/queries/amendments'
 import { formatMoneyCompact, formatPct } from '@/lib/finance'
 import { formatRelative } from '@/lib/format'
 import { Card, PageHeader, StatCard, Avatar } from '@/components/ui/Layout'
@@ -19,11 +20,24 @@ function greeting() {
 }
 
 export function DashboardPage() {
-  const { user, isAdmin, mulheresAccess, financeAccess } = useAuth()
+  const { user, isAdmin, mulheresAccess, financeAccess, amendmentsAccess } = useAuth()
   const finance = useFinanceDashboard(undefined, financeAccess.canRead)
   const mulheres = useMulheres(mulheresAccess.canRead)
   const categories = useCategories()
   const users = useUsers(isAdmin)
+  // Mesmo escopo do painel de /emendas (paradas = 30+ dias): reaproveita o cache
+  const amendments = useAmendmentSummary({ idleDays: 30 }, amendmentsAccess.canRead)
+  const s = amendments.data
+  const amendmentsHint = s
+    ? [
+        s.expired > 0 && `${s.expired} com vigência vencida`,
+        s.nearDeadline > 0 && `${s.nearDeadline} perto da vigência`,
+        s.pending > 0 && `${s.pending} com pendência`,
+      ]
+        .filter(Boolean)
+        .slice(0, 2)
+        .join(' · ') || 'Nenhum alerta'
+    : undefined
 
   const list = mulheres.data ?? []
   const riskVisible = mulheresAccess.canReadColumn('sob_risco')
@@ -90,6 +104,15 @@ export function DashboardPage() {
             hint={finance.data ? `${formatPct(finance.data.committedAmount, finance.data.totalAmount)} empenhado de ${formatMoneyCompact(finance.data.totalAmount)}` : undefined}
             icon={<Wallet className="size-5" />}
             to="/financeiro"
+          />
+        )}
+        {amendmentsAccess.canRead && (
+          <StatCard
+            label="Emendas em aberto"
+            value={amendments.data ? amendments.data.open : '…'}
+            hint={amendmentsHint}
+            icon={<Landmark className="size-5" />}
+            to={amendments.data?.expired ? '/emendas?ver=vencidas' : '/emendas'}
           />
         )}
         <StatCard

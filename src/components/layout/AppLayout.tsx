@@ -23,6 +23,9 @@ import {
   UsersRound,
   Wallet,
   X,
+  Building2,
+  Landmark,
+  ScrollText,
 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { useCategories } from '@/queries/admin'
@@ -39,11 +42,14 @@ interface NavItem {
   end?: boolean
   /** Outros caminhos que também marcam o item como ativo */
   also?: string[]
+  /** Caminhos que, mesmo abaixo de `to`, pertencem a outro item */
+  except?: string[]
 }
 
 const isItemActive = (it: NavItem, pathname: string) =>
-  (it.end ? pathname === it.to : pathname === it.to || pathname.startsWith(`${it.to}/`)) ||
-  !!it.also?.some((p) => pathname.startsWith(p))
+  !it.except?.some((p) => pathname.startsWith(p)) &&
+  ((it.end ? pathname === it.to : pathname === it.to || pathname.startsWith(`${it.to}/`)) ||
+    !!it.also?.some((p) => pathname.startsWith(p)))
 
 function NavItems({ items, onNavigate }: { items: NavItem[]; onNavigate: () => void }) {
   const { pathname } = useLocation()
@@ -163,7 +169,7 @@ function NavGroup({
 }
 
 export function AppLayout() {
-  const { user, isAdmin, mulheresAccess, financeAccess, fleetAccess, logout } = useAuth()
+  const { user, isAdmin, mulheresAccess, financeAccess, fleetAccess, amendmentsAccess, logout } = useAuth()
   const isDriver = useIsDriver()
   const categories = useCategories()
   const [open, setOpen] = useState(false)
@@ -199,6 +205,13 @@ export function AppLayout() {
     ...(isDriver ? [{ to: '/frotas/minha-agenda', label: 'Minha agenda', icon: CalendarCheck2 }] : []),
   ]
 
+  const emendas: NavItem[] = amendmentsAccess.canRead
+    ? [
+        { to: '/emendas', label: 'Acompanhamento', icon: ScrollText, except: ['/emendas/setores'] },
+        { to: '/emendas/setores', label: 'Setores', icon: Building2 },
+      ]
+    : []
+
   const admin: NavItem[] = isAdmin
     ? [
         { to: '/admin/funcionarias', label: 'Funcionárias', icon: Users },
@@ -217,6 +230,7 @@ export function AppLayout() {
           <NavGroup title="Cadastros" icon={FolderKanban} items={cadastros} onNavigate={close} />
           <NavGroup title="Financeiro" icon={Wallet} items={financeiro} onNavigate={close} />
           <NavGroup title="Frotas" icon={CarFront} items={frotas} onNavigate={close} />
+          <NavGroup title="Emendas" icon={Landmark} items={emendas} onNavigate={close} />
           <NavGroup title="Administração" icon={SlidersHorizontal} items={admin} onNavigate={close} />
         </div>
       </div>

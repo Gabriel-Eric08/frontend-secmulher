@@ -33,6 +33,10 @@ import { MotoristaDetailPage } from '@/pages/frotas/MotoristaDetailPage'
 import { VeiculosPage } from '@/pages/frotas/VeiculosPage'
 import { VeiculoDetailPage } from '@/pages/frotas/VeiculoDetailPage'
 import { MinhaAgendaPage } from '@/pages/frotas/MinhaAgendaPage'
+import { EmendasPage } from '@/pages/emendas/EmendasPage'
+import { EmendaDetailPage } from '@/pages/emendas/EmendaDetailPage'
+import { EmendaFormPage } from '@/pages/emendas/EmendaFormPage'
+import { SetoresPage } from '@/pages/emendas/SetoresPage'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage />, errorElement: <RouteErrorPage fullScreen /> },
@@ -74,6 +78,12 @@ const router = createBrowserRouter([
           { path: 'frotas/motoristas/:id', element: <MotoristaDetailPage /> },
           { path: 'frotas/veiculos', element: <VeiculosPage /> },
           { path: 'frotas/veiculos/:id', element: <VeiculoDetailPage /> },
+
+          { path: 'emendas', element: <EmendasPage /> },
+          { path: 'emendas/nova', element: <EmendaFormPage /> },
+          { path: 'emendas/setores', element: <SetoresPage /> },
+          { path: 'emendas/:id', element: <EmendaDetailPage /> },
+          { path: 'emendas/:id/editar', element: <EmendaFormPage /> },
 
           {
             path: 'admin',

@@ -4,7 +4,7 @@ import { authApi, type CategoryAccess, type LoginRequest, type User, type UUID }
 import { setUnauthorizedHandler } from '@/api/http'
 import { sessionExpiry, sessionNotice, tokenStorage } from '@/api/tokenStorage'
 import { qk } from '@/queries/keys'
-import { FINANCE_TABLE, FLEET_TABLE, MULHERES_TABLE, resolveAccess, type Access } from './access'
+import { AMENDMENTS_TABLE, FINANCE_TABLE, FLEET_TABLE, MULHERES_TABLE, resolveAccess, type Access } from './access'
 
 /** error = há token, mas não foi possível carregar /auth/me (servidor fora, erro 500…) */
 type Status = 'loading' | 'authenticated' | 'anonymous' | 'error'
@@ -25,6 +25,8 @@ interface AuthContextValue {
   financeAccess: Access
   /** Acesso efetivo ao módulo de frotas (categoria nativa fleet_trips) */
   fleetAccess: Access
+  /** Acesso efetivo ao módulo de emendas (categoria nativa amendments) */
+  amendmentsAccess: Access
   accessFor: (categoryId: UUID) => Access
 }
 
@@ -104,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mulheresAccess: resolveAccess(isAdmin, access, { tableReference: MULHERES_TABLE }),
       financeAccess: resolveAccess(isAdmin, access, { tableReference: FINANCE_TABLE }),
       fleetAccess: resolveAccess(isAdmin, access, { tableReference: FLEET_TABLE }),
+      amendmentsAccess: resolveAccess(isAdmin, access, { tableReference: AMENDMENTS_TABLE }),
       accessFor: (categoryId) => resolveAccess(isAdmin, access, { categoryId }),
     }
   }, [me.data, me.isPending, me.isError, me.error, hasToken, login, logout, qc])

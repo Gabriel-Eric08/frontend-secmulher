@@ -13,6 +13,9 @@ export const FINANCE_TABLE = 'finance_actions'
 /** Tabela nativa do módulo de frotas: a permissão nessa categoria vale para todo o módulo. */
 export const FLEET_TABLE = 'fleet_trips'
 
+/** Tabela nativa do módulo de emendas: a permissão nessa categoria vale para todo o módulo. */
+export const AMENDMENTS_TABLE = 'amendments'
+
 /**
  * Acesso efetivo do usuário a uma categoria. É só para a interface (esconder botões,
  * desabilitar campos): a autorização de verdade é sempre do backend.

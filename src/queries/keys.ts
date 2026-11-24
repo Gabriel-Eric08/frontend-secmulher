@@ -1,4 +1,4 @@
-import type { CommitmentFilters, OperationFilters, PeriodFilter, RecordKind, SearchRequest, TripFilters, UUID } from '@/api'
+import type { AmendmentFilters, AmendmentSummaryFilters, CommitmentFilters, OperationFilters, PeriodFilter, RecordKind, SearchRequest, TripFilters, UUID } from '@/api'
 
 /** Chaves centralizadas do React Query: facilita invalidação consistente. */
 export const qk = {
@@ -68,5 +68,17 @@ export const qk = {
     mine: (period?: { from?: string; to?: string }) => ['fleet', 'mine', period ?? {}] as const,
     trip: (id: UUID) => ['fleet', 'trip', id] as const,
     availability: (start: string, end: string) => ['fleet', 'availability', start, end] as const,
+  },
+
+  /** Tudo de emendas sob ['amendments']: uma pendência muda situação, painel, lista e linha do tempo. */
+  amendments: {
+    all: ['amendments'] as const,
+    list: (filters?: AmendmentFilters) => ['amendments', 'list', filters ?? {}] as const,
+    summary: (filters?: AmendmentSummaryFilters) => ['amendments', 'summary', filters ?? {}] as const,
+    options: ['amendments', 'options'] as const,
+    detail: (id: UUID) => ['amendments', 'detail', id] as const,
+    timeline: (id: UUID) => ['amendments', 'detail', id, 'timeline'] as const,
+    pendencies: (id: UUID) => ['amendments', 'detail', id, 'pendencies'] as const,
+    sectors: ['amendments', 'sectors'] as const,
   },
 }
