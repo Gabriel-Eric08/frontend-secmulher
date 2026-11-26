@@ -10,6 +10,7 @@ Referência de **tudo o que existe na aplicação**: tabelas e colunas, valores 
 - [Módulos](#módulos)
 - [Tabelas do core](#tabelas-do-core)
 - [Tabelas do módulo financeiro](#tabelas-do-módulo-financeiro)
+- [Tabelas do módulo de frotas](#tabelas-do-módulo-de-frotas)
 - [Valores de domínio (enums)](#valores-de-domínio-enums)
 - [Rotas da API](#rotas-da-api)
 - [Glossário](#glossário)
@@ -38,6 +39,7 @@ Referência de **tudo o que existe na aplicação**: tabelas e colunas, valores 
 |---|---|---|
 | core | `com.secmulher.modules.core` | Usuários, autenticação, categorias, permissões, clientes, entidades dinâmicas, linha do tempo, documentos. |
 | finance | `com.secmulher.modules.finance` | Ações, subações, operações orçamentárias (Métodos A/B/C) e execução da despesa (empenho, liquidação, pagamento). |
+| fleet | `com.secmulher.modules.fleet` | Frotas: motoristas, veículos, viagens e participantes; agenda dos motoristas e disponibilidade. |
 
 ---
 
@@ -62,7 +64,7 @@ Referência de **tudo o que existe na aplicação**: tabelas e colunas, valores 
 | `id` | UUID | sim | Identificador. |
 | `name` | VARCHAR(255) | sim | Nome (único). Ex.: "Mulheres", "Cursos", "Financeiro". |
 | `entity_type` | VARCHAR(50) | sim | `native` (tabela própria) ou `dynamic` (registros em `dynamic_entities`). |
-| `table_reference` | VARCHAR(100) | sim | Tabela dos registros. Nativas: `clients` (clientes) ou `finance_actions` (módulo financeiro). Dinâmicas: `dynamic_entities`. |
+| `table_reference` | VARCHAR(100) | sim | Tabela dos registros. Nativas: `clients` (clientes), `finance_actions` (módulo financeiro) ou `fleet_trips` (módulo de frotas). Dinâmicas: `dynamic_entities`. |
 | `is_active` | BOOLEAN | não | Categoria desativada. Padrão `true`. |
 | `created_at` | TIMESTAMPTZ | não | Criação. |
 
@@ -259,6 +261,95 @@ Restrição `ck_finance_commitments_execution`: `paid_amount <= liquidated_amoun
 
 ---
 
+## Tabelas do módulo de frotas
+
+Relações:
+
+```
+fleet_drivers 1─N fleet_trips N─1 fleet_vehicles
+                       │
+                       1─N fleet_trip_participants ──> users / clients (opcional)
+```
+
+### `fleet_drivers` — motoristas
+
+| Coluna | Tipo | Obrig. | Descrição |
+|---|---|---|---|
+| `id` | UUID | sim | Identificador. |
+| `name` | VARCHAR(255) | sim | Nome do motorista. |
+| `phone` | VARCHAR(50) | não | Telefone. |
+| `license_number` | VARCHAR(20) | sim | Número da CNH (9 a 11 dígitos), único. |
+| `license_category` | VARCHAR(5) | sim | Categoria da CNH: `A`, `B`, `C`, `D`, `E`, `AB`, `AC`, `AD` ou `AE`. |
+| `license_expiry` | DATE | sim | Validade da CNH. Motorista com CNH vencida até o dia da volta não pode ser escalado. |
+| `user_id` | UUID → `users` | não | Usuário do sistema vinculado (único). Esse usuário vê a própria agenda em `/fleet/trips/mine`. |
+| `notes` | TEXT | não | Observações. |
+| `is_active` | BOOLEAN | sim | Inativo não pode ser escalado. |
+| `created_by` | UUID → `users` | não | Quem cadastrou. |
+| `created_at` / `updated_at` | TIMESTAMPTZ | não | Criação e última alteração. |
+
+### `fleet_vehicles` — veículos
+
+| Coluna | Tipo | Obrig. | Descrição |
+|---|---|---|---|
+| `id` | UUID | sim | Identificador. |
+| `plate` | VARCHAR(10) | sim | Placa, única, sem hífen e em maiúsculas (padrão antigo `ABC1234` ou Mercosul `ABC1D23`). |
+| `brand` | VARCHAR(100) | não | Marca. |
+| `model` | VARCHAR(100) | sim | Modelo. |
+| `year` | INTEGER | não | Ano. |
+| `color` | VARCHAR(50) | não | Cor. |
+| `capacity` | INTEGER | sim | Lugares para **passageiros**, sem contar o motorista (> 0). Limita os participantes da viagem. |
+| `odometer_km` | INTEGER | sim | Quilometragem atual (≥ 0). Avança ao concluir uma viagem; pode ser corrigida na edição do veículo. |
+| `notes` | TEXT | não | Observações. |
+| `is_active` | BOOLEAN | sim | Inativo não pode ser escalado. |
+| `created_by` | UUID → `users` | não | Quem cadastrou. |
+| `created_at` / `updated_at` | TIMESTAMPTZ | não | Criação e última alteração. |
+
+### `fleet_trips` — viagens
+
+| Coluna | Tipo | Obrig. | Descrição |
+|---|---|---|---|
+| `id` | UUID | sim | Identificador. |
+| `number` | BIGSERIAL | sim | Número sequencial da viagem. |
+| `status` | VARCHAR(20) | sim | Situação (`TripStatus`). Padrão `SCHEDULED`. |
+| `purpose` | VARCHAR(255) | sim | Motivo/título da viagem. |
+| `description` | TEXT | não | Descrição. |
+| `departure_location` | VARCHAR(255) | sim | Local de partida. |
+| `destination` | VARCHAR(255) | sim | Destino. |
+| `departure_at` | TIMESTAMPTZ | sim | Ida prevista (data e hora). |
+| `return_at` | TIMESTAMPTZ | sim | Volta prevista. Precisa ser depois da ida (`ck_fleet_trips_period`). |
+| `driver_id` | UUID → `fleet_drivers` | sim | Motorista escalado. |
+| `vehicle_id` | UUID → `fleet_vehicles` | sim | Veículo escalado. |
+| `actual_departure_at` | TIMESTAMPTZ | não | Saída real, registrada ao iniciar. |
+| `actual_return_at` | TIMESTAMPTZ | não | Volta real, registrada ao concluir. |
+| `start_odometer_km` | INTEGER | não | Quilometragem na saída. |
+| `end_odometer_km` | INTEGER | não | Quilometragem na volta (≥ inicial, `ck_fleet_trips_odometer`). |
+| `completion_notes` | TEXT | não | Observações da conclusão. |
+| `cancellation_reason` | TEXT | não | Motivo do cancelamento. |
+| `cancelled_at` | TIMESTAMPTZ | não | Quando foi cancelada. |
+| `cancelled_by` | UUID → `users` | não | Quem cancelou. |
+| `created_by` | UUID → `users` | não | Quem cadastrou. |
+| `created_at` / `updated_at` | TIMESTAMPTZ | não | Criação e última alteração. |
+
+Derivado: **distância** (`distanceKm` na API) = `end_odometer_km` − `start_odometer_km`. Conflito de agenda: duas viagens não canceladas do mesmo motorista ou do mesmo veículo não podem se sobrepor no intervalo previsto `[departure_at, return_at)` (uma pode começar exatamente quando a outra termina).
+
+### `fleet_trip_participants` — participantes da viagem
+
+| Coluna | Tipo | Obrig. | Descrição |
+|---|---|---|---|
+| `id` | UUID | sim | Identificador. |
+| `trip_id` | UUID → `fleet_trips` | sim | Viagem (apagado em cascata com a viagem). |
+| `participant_type` | VARCHAR(20) | sim | Tipo (`ParticipantType`). |
+| `user_id` | UUID → `users` | não | Usuário do sistema, quando `USER`. |
+| `client_id` | UUID → `clients` | não | Atendida, quando `CLIENT`. |
+| `name` | VARCHAR(255) | sim | Nome no momento do cadastro (do usuário, da atendida ou informado). Permanece se o usuário ou a atendida for excluído. |
+| `phone` | VARCHAR(50) | não | Telefone. |
+| `document` | VARCHAR(50) | não | Documento (ex.: CPF/RG), útil para externos. |
+| `notes` | TEXT | não | Observações (ex.: "acompanhante"). |
+
+**Sigilo:** participantes `CLIENT` (atendidas) só aparecem com nome, telefone, documento e observações para quem pode ler a coluna `nome` na categoria de clientes; para os demais vêm com `hidden: true` e esses campos nulos. Incluir uma atendida também exige essa permissão.
+
+---
+
 ## Valores de domínio (enums)
 
 ### Core
@@ -292,6 +383,18 @@ Restrição `ck_finance_commitments_execution`: `paid_amount <= liquidated_amoun
 | | `TO_PAY` | Tudo liquidado, há valor a pagar. |
 | | `PAID` | Tudo liquidado e pago. |
 | | `CANCELLED` | Anulado por inteiro, sem nada liquidado. |
+
+### Frotas
+
+| Enum | Valor | Significado |
+|---|---|---|
+| `TripStatus` | `SCHEDULED` | Agendada. Única situação em que a viagem pode ser editada, iniciada ou cancelada. |
+| | `IN_PROGRESS` | Em andamento (iniciada, com saída real e km inicial). |
+| | `COMPLETED` | Concluída (com volta real e km final). |
+| | `CANCELLED` | Cancelada (com motivo). Não ocupa mais a agenda. |
+| `ParticipantType` | `USER` | Usuário do sistema (servidora). |
+| | `CLIENT` | Atendida cadastrada em `clients` (dado sensível). |
+| | `EXTERNAL` | Pessoa sem cadastro: nome (obrigatório), telefone e documento. |
 
 ---
 
@@ -395,6 +498,37 @@ Em todas as rotas `?date=AAAA-MM-DD` mostra os valores no fim daquele dia (pela 
 
 **Campos de resposta do financeiro:** `totalAmount`, `distributedAmount`, `undistributedAmount`, `balance` (dotação da subação), `committedAmount`, `liquidatedAmount`, `paidAmount`, `availableAmount`; nas operações, `number`, `method`, `methodLabel`, `operationDate` (data real), `registeredAt` (registro), `commitmentId`/`commitmentNumber` e `entries[]` (`kind`, `amount` com sinal); nos empenhos, `commitmentDate`, `cancelledAmount`, `toLiquidateAmount`, `toPayAmount`, `status`.
 
+### Frotas
+
+Acesso pela categoria nativa com `table_reference = 'fleet_trips'`. Datas e horas no formato `AAAA-MM-DDTHH:MM[:SS]`.
+
+| Método | Rota | Acesso | Descrição |
+|---|---|---|---|
+| `GET` | `/fleet/drivers` | leitura | Lista motoristas (com `licenseExpired`). |
+| `GET` | `/fleet/drivers/{id}` | leitura | Busca motorista. |
+| `POST` | `/fleet/drivers` | criação | Cria: `name`, `phone`, `licenseNumber`, `licenseCategory`, `licenseExpiry`, `userId`, `notes`. |
+| `PUT` | `/fleet/drivers/{id}` | edição | Altera os mesmos campos e `isActive`. |
+| `DELETE` | `/fleet/drivers/{id}` | exclusão | Exclui motorista sem viagens (409 caso contrário). |
+| `GET` | `/fleet/vehicles` | leitura | Lista veículos. |
+| `GET` | `/fleet/vehicles/{id}` | leitura | Busca veículo. |
+| `POST` | `/fleet/vehicles` | criação | Cria: `plate`, `brand`, `model`, `year`, `color`, `capacity`, `odometerKm`, `notes`. |
+| `PUT` | `/fleet/vehicles/{id}` | edição | Altera os mesmos campos e `isActive`. |
+| `DELETE` | `/fleet/vehicles/{id}` | exclusão | Exclui veículo sem viagens (409 caso contrário). |
+| `GET` | `/fleet/trips?from=&to=&driverId=&vehicleId=&status=` | leitura | Agenda: viagens que se sobrepõem ao período (datas `AAAA-MM-DD`), em ordem de saída. |
+| `GET` | `/fleet/trips/mine?from=&to=` | autenticado | Agenda do motorista vinculado ao usuário logado (404 se não houver vínculo). Não exige permissão na categoria. |
+| `GET` | `/fleet/trips/{id}` | leitura ou o motorista da viagem | Uma viagem com participantes. |
+| `POST` | `/fleet/trips` | criação | Agenda: `driverId`, `vehicleId`, `purpose`, `description`, `departureLocation`, `destination`, `departureAt`, `returnAt`, `participants[]` (`type`, `userId`, `clientId`, `name`, `phone`, `document`, `notes`). |
+| `PUT` | `/fleet/trips/{id}` | edição | Altera viagem agendada (mesmos campos; `participants` substitui a lista). |
+| `POST` | `/fleet/trips/{id}/start` | edição | Inicia: `startOdometerKm`, `actualDepartureAt` (padrão agora). |
+| `POST` | `/fleet/trips/{id}/complete` | edição | Conclui: `endOdometerKm`, `actualReturnAt` (padrão agora), `notes`. Avança o odômetro do veículo. |
+| `POST` | `/fleet/trips/{id}/cancel` | edição | Cancela viagem agendada: `reason` (obrigatório). |
+| `GET` | `/fleet/availability?start=&end=` | leitura | Motoristas (ativos, sem viagem no intervalo e com CNH válida até o fim) e veículos (ativos e livres) disponíveis. |
+
+**Regras de escala** (criação e edição, com motorista e veículo travados durante a checagem): volta depois da ida (400); motorista e veículo ativos (422); CNH válida até o dia da volta (422); sem sobreposição com outra viagem não cancelada do motorista ou do veículo (409, informando a viagem em conflito); participantes ≤ `capacity` (422); sem participante repetido (400).
+
+**Campos de resposta da viagem:** `number`, `status`, `statusLabel`, `driver` (`id`, `name`, `phone`), `vehicle` (`id`, `plate`, `brand`, `model`, `capacity`), `participantCount`, `participants[]` (com `hidden`), `actualDepartureAt`, `actualReturnAt`, `startOdometerKm`, `endOdometerKm`, `distanceKm`, `completionNotes`, `cancellationReason`, `cancelledAt`, `cancelledBy`.
+
+
 ---
 
 ## Glossário
@@ -416,4 +550,9 @@ Em todas as rotas `?date=AAAA-MM-DD` mostra os valores no fim daquele dia (pela 
 | Liquidação | Reconhecimento de que a despesa empenhada é devida (ex.: entrega conferida). |
 | Pagamento | Saída do dinheiro; só até o valor liquidado. |
 | Data real | Data em que a operação de fato aconteceu (`operation_date`), diferente do momento do registro. |
+| Escala | Designação de um motorista e um veículo para uma viagem em um intervalo de tempo. |
+| Agenda do motorista | Viagens de um motorista em um período; o próprio motorista a vê em `/fleet/trips/mine`. |
+| Conflito de agenda | Duas viagens não canceladas do mesmo motorista ou veículo com horários sobrepostos (recusado). |
+| Capacidade | Lugares para passageiros do veículo, sem o motorista; limita os participantes. |
+| Odômetro | Quilometragem do veículo; avança com a km final das viagens concluídas. |
 | Linha do tempo financeira | Toda operação com data passada é conferida dia a dia: disponível da subação, saldo a distribuir da ação e ordem empenho → liquidação → pagamento nunca podem ficar inválidos em nenhum dia. |
