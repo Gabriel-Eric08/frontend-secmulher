@@ -1,4 +1,17 @@
-import type { AmendmentFilters, AmendmentSummaryFilters, CommitmentFilters, OperationFilters, PeriodFilter, RecordKind, SearchRequest, TripFilters, UUID } from '@/api'
+import type {
+  AmendmentFilters,
+  AmendmentSummaryFilters,
+  CommitmentFilters,
+  GoalFilters,
+  OperationFilters,
+  PeriodFilter,
+  RecordKind,
+  SearchRequest,
+  TaskFilters,
+  TaskSummaryFilters,
+  TripFilters,
+  UUID,
+} from '@/api'
 
 /** Chaves centralizadas do React Query: facilita invalidação consistente. */
 export const qk = {
@@ -80,5 +93,19 @@ export const qk = {
     timeline: (id: UUID) => ['amendments', 'detail', id, 'timeline'] as const,
     pendencies: (id: UUID) => ['amendments', 'detail', id, 'pendencies'] as const,
     sectors: ['amendments', 'sectors'] as const,
+  },
+
+  /** Tudo de tarefas sob ['tasks']: uma ação na subtarefa muda a tarefa-mãe, a meta, o painel e o histórico. */
+  tasks: {
+    all: ['tasks'] as const,
+    goals: (filters?: GoalFilters) => ['tasks', 'goals', filters ?? {}] as const,
+    goal: (id: UUID) => ['tasks', 'goal', id] as const,
+    goalTimeline: (id: UUID) => ['tasks', 'goal', id, 'timeline'] as const,
+    list: (filters?: TaskFilters) => ['tasks', 'list', filters ?? {}] as const,
+    summary: (filters?: TaskSummaryFilters) => ['tasks', 'summary', filters ?? {}] as const,
+    options: (goalId?: UUID) => ['tasks', 'options', { goalId }] as const,
+    detail: (id: UUID) => ['tasks', 'detail', id] as const,
+    timeline: (id: UUID) => ['tasks', 'detail', id, 'timeline'] as const,
+    pendencies: (id: UUID) => ['tasks', 'detail', id, 'pendencies'] as const,
   },
 }
