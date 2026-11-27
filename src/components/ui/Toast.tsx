@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
-import { CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react'
 import { errorMessage } from '@/api'
 
-type ToastKind = 'success' | 'error'
+type ToastKind = 'success' | 'error' | 'info'
 interface ToastItem {
   id: number
   kind: ToastKind
@@ -14,6 +14,8 @@ interface ToastItem {
 interface ToastApi {
   success: (message: string) => void
   error: (messageOrError: unknown) => void
+  /** Aviso neutro (ex.: movimento que o sistema não permite) */
+  info: (message: string) => void
 }
 
 const ToastContext = createContext<ToastApi | null>(null)
@@ -37,6 +39,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     () => ({
       success: (m) => push('success', m),
       error: (e) => push('error', typeof e === 'string' ? e : errorMessage(e)),
+      info: (m) => push('info', m),
     }),
     [push],
   )
@@ -52,11 +55,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               role="status"
               className={clsx(
                 'pointer-events-auto flex w-full max-w-sm animate-toast-in items-start gap-3 rounded-xl border bg-surface px-4 py-3 text-sm shadow-(--shadow-pop)',
-                t.kind === 'success' ? 'border-emerald-200' : 'border-red-200',
+                t.kind === 'success' ? 'border-emerald-200' : t.kind === 'info' ? 'border-brand-200' : 'border-red-200',
               )}
             >
               {t.kind === 'success' ? (
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+              ) : t.kind === 'info' ? (
+                <Info className="mt-0.5 size-4 shrink-0 text-brand-600" />
               ) : (
                 <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-600" />
               )}

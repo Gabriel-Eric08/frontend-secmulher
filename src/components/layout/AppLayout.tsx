@@ -26,6 +26,9 @@ import {
   Building2,
   Landmark,
   ScrollText,
+  Target,
+  ListChecks,
+  KanbanSquare,
 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { useCategories } from '@/queries/admin'
@@ -169,7 +172,7 @@ function NavGroup({
 }
 
 export function AppLayout() {
-  const { user, isAdmin, mulheresAccess, financeAccess, fleetAccess, amendmentsAccess, logout } = useAuth()
+  const { user, isAdmin, mulheresAccess, financeAccess, fleetAccess, amendmentsAccess, tasksAccess, logout } = useAuth()
   const isDriver = useIsDriver()
   const categories = useCategories()
   const [open, setOpen] = useState(false)
@@ -212,6 +215,14 @@ export function AppLayout() {
       ]
     : []
 
+  const metas: NavItem[] = tasksAccess.canRead
+    ? [
+        { to: '/metas', label: 'Metas', icon: Target, except: ['/metas/tarefas', '/metas/quadro'] },
+        { to: '/metas/quadro', label: 'Quadro', icon: KanbanSquare },
+        { to: '/metas/tarefas', label: 'Tarefas', icon: ListChecks },
+      ]
+    : []
+
   const admin: NavItem[] = isAdmin
     ? [
         { to: '/admin/funcionarias', label: 'Funcionárias', icon: Users },
@@ -231,6 +242,7 @@ export function AppLayout() {
           <NavGroup title="Financeiro" icon={Wallet} items={financeiro} onNavigate={close} />
           <NavGroup title="Frotas" icon={CarFront} items={frotas} onNavigate={close} />
           <NavGroup title="Emendas" icon={Landmark} items={emendas} onNavigate={close} />
+          <NavGroup title="Metas e tarefas" icon={Target} items={metas} onNavigate={close} />
           <NavGroup title="Administração" icon={SlidersHorizontal} items={admin} onNavigate={close} />
         </div>
       </div>
