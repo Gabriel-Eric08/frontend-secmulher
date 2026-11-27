@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import clsx from 'clsx'
-import { Ban, CalendarClock, CircleCheck, Flag, ListTodo, MessageSquarePlus, NotebookPen, Pause, Pencil, Play, Plus, RotateCcw, Target, Trash2, UserRound } from 'lucide-react'
+import { Ban, CalendarClock, KanbanSquare, CircleCheck, Flag, ListTodo, MessageSquarePlus, NotebookPen, Pause, Pencil, Play, Plus, RotateCcw, Target, Trash2, UserRound } from 'lucide-react'
 import type { Goal, Task } from '@/api'
 import { useAuth } from '@/auth/AuthContext'
 import { useDeleteGoal, useGoal, useGoalTimeline } from '@/queries/tasks'
@@ -9,7 +9,7 @@ import { canCreateTaskIn, canManageGoal, canTrackTask, findTask, idleLabel, isGo
 import { formatDateTimeLocal } from '@/lib/fleet'
 import { formatDate } from '@/lib/format'
 import { Card, PageHeader, Tabs } from '@/components/ui/Layout'
-import { Button } from '@/components/ui/Button'
+import { Button, ButtonLink } from '@/components/ui/Button'
 import { MenuButton } from '@/components/ui/Menu'
 import { EmptyState, ErrorState, ForbiddenState } from '@/components/ui/States'
 import { PageSkeleton } from '@/components/ui/Spinner'
@@ -166,11 +166,18 @@ export function MetaDetailPage() {
           description="Na ordem definida (use as setas para reordenar). Subtarefas aparecem abaixo da tarefa-mãe."
           padded={false}
           actions={
-            canAddTask && (
-              <Button size="sm" icon={<Plus className="size-3.5" />} onClick={() => setAddingTask(true)}>
-                Nova tarefa
-              </Button>
-            )
+            <div className="flex gap-2">
+              {tasks.length > 0 && (
+                <ButtonLink to={`/metas/quadro?meta=${g.id}`} size="sm" variant="secondary" icon={<KanbanSquare className="size-3.5" />}>
+                  Ver no quadro
+                </ButtonLink>
+              )}
+              {canAddTask && (
+                <Button size="sm" icon={<Plus className="size-3.5" />} onClick={() => setAddingTask(true)}>
+                  Nova tarefa
+                </Button>
+              )}
+            </div>
           }
         >
           {tasks.length === 0 ? (

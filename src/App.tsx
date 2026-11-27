@@ -41,6 +41,7 @@ import { MetasPage } from '@/pages/metas/MetasPage'
 import { MetaDetailPage } from '@/pages/metas/MetaDetailPage'
 import { TarefasPage } from '@/pages/metas/TarefasPage'
 import { TarefaDetailPage } from '@/pages/metas/TarefaDetailPage'
+import { QuadroPage } from '@/pages/metas/QuadroPage'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage />, errorElement: <RouteErrorPage fullScreen /> },
@@ -90,6 +91,7 @@ const router = createBrowserRouter([
           { path: 'emendas/:id/editar', element: <EmendaFormPage /> },
 
           { path: 'metas', element: <MetasPage /> },
+          { path: 'metas/quadro', element: <QuadroPage /> },
           { path: 'metas/tarefas', element: <TarefasPage /> },
           { path: 'metas/tarefas/:id', element: <TarefaDetailPage /> },
           { path: 'metas/:id', element: <MetaDetailPage /> },

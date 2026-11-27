@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import clsx from 'clsx'
-import { Hourglass, OctagonAlert } from 'lucide-react'
+import { CheckCircle2, Hourglass, OctagonAlert, Pause, Play } from 'lucide-react'
 import { ApiError, type Goal, type Task, type TaskPendency, type TaskPendencyKind, type TaskPriority, type TaskUserRef, type UUID } from '@/api'
 import { useAuth } from '@/auth/AuthContext'
 import { useUsers } from '@/queries/admin'
@@ -23,6 +23,7 @@ import {
   useSaveTask,
   useStartTask,
   useTaskOptions,
+  useTaskPendencies,
 } from '@/queries/tasks'
 import { PRIORITIES, PRIORITY_LABEL } from '@/lib/tasks'
 import { formatDateTimeLocal, toLocalDateTime, trimSeconds } from '@/lib/fleet'
@@ -30,7 +31,8 @@ import { formatDate, normalize } from '@/lib/format'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Field, Input, Select, Textarea } from '@/components/ui/Form'
-import { Alert } from '@/components/ui/States'
+import { Alert, ErrorState } from '@/components/ui/States'
+import { LoadingBlock } from '@/components/ui/Spinner'
 import { ResponsibleInput } from './ResponsibleInput'
 import { useToast } from '@/components/ui/Toast'
 
@@ -780,5 +782,80 @@ function ReasonModal({ target, mode, onClose }: { target: TrackTarget; mode: 'ho
         </Field>
       </form>
     </Modal>
+  )
+}
+
+// ---------------------------------------------------------------- Tirar do impedimento (quadro)
+
+/**
+ * A coluna "Com impedimento" junta pausa e pendências abertas. Para sair dela, é preciso
+ * retomar a pausa e resolver as pendências; aqui ficam as duas coisas, uma de cada vez.
+ */
+export function UnblockModal({ task, onClose }: { task: Task; onClose: () => void }) {
+  const pendencies = useTaskPendencies(task.id)
+  const [resuming, setResuming] = useState(false)
+  const [resolving, setResolving] = useState<TaskPendency | null>(null)
+  const open = (pendencies.data ?? []).filter((p) => p.open)
+  const onHold = task.status === 'ON_HOLD'
+  const clear = !onHold && !pendencies.isPending && open.length === 0
+
+  return (
+    <>
+      <Modal
+        open={!resuming && !resolving}
+        onClose={onClose}
+        title="Tirar do impedimento"
+        description={task.title}
+        footer={
+          <Button variant={clear ? 'primary' : 'secondary'} onClick={onClose}>
+            {clear ? 'Pronto' : 'Fechar'}
+          </Button>
+        }
+      >
+        <div className="space-y-3">
+          {clear && (
+            <Alert tone="info" title="Nada mais travando">
+              A tarefa volta para {task.startedAt ? 'Em andamento' : 'A fazer'}.
+            </Alert>
+          )}
+          {onHold && (
+            <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <Pause className="mt-0.5 size-4 shrink-0 text-amber-700" />
+              <div className="min-w-0 flex-1 text-sm text-amber-900">
+                <p className="font-medium">Pausada desde {formatDateTimeLocal(task.onHoldSince)}</p>
+                {task.holdReason && <p className="opacity-80">{task.holdReason}</p>}
+              </div>
+              <Button size="sm" icon={<Play className="size-3.5" />} onClick={() => setResuming(true)}>
+                Retomar
+              </Button>
+            </div>
+          )}
+          {pendencies.isPending ? (
+            <LoadingBlock />
+          ) : pendencies.isError ? (
+            <ErrorState error={pendencies.error} onRetry={() => pendencies.refetch()} />
+          ) : (
+            open.map((p) => (
+              <div key={p.id} className="flex items-start gap-3 rounded-xl border border-ink-200 px-4 py-3">
+                {p.kind === 'IMPEDIMENT' ? (
+                  <OctagonAlert className="mt-0.5 size-4 shrink-0 text-red-600" />
+                ) : (
+                  <Hourglass className="mt-0.5 size-4 shrink-0 text-amber-700" />
+                )}
+                <div className="min-w-0 flex-1 text-sm">
+                  <p className="font-medium text-ink-900">{p.kindLabel}{p.waitingOn ? ` · ${p.waitingOn}` : ''}</p>
+                  <p className="whitespace-pre-line text-ink-600">{p.description}</p>
+                </div>
+                <Button size="sm" variant="secondary" icon={<CheckCircle2 className="size-3.5" />} onClick={() => setResolving(p)}>
+                  Resolver
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </Modal>
+      {resuming && <ResumeModal target={{ kind: 'task', task }} onClose={() => setResuming(false)} />}
+      {resolving && <ResolveTaskPendencyModal pendency={resolving} onClose={() => setResolving(null)} />}
+    </>
   )
 }

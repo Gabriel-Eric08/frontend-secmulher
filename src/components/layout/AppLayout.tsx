@@ -28,6 +28,7 @@ import {
   ScrollText,
   Target,
   ListChecks,
+  KanbanSquare,
 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { useCategories } from '@/queries/admin'
@@ -216,7 +217,8 @@ export function AppLayout() {
 
   const metas: NavItem[] = tasksAccess.canRead
     ? [
-        { to: '/metas', label: 'Metas', icon: Target, except: ['/metas/tarefas'] },
+        { to: '/metas', label: 'Metas', icon: Target, except: ['/metas/tarefas', '/metas/quadro'] },
+        { to: '/metas/quadro', label: 'Quadro', icon: KanbanSquare },
         { to: '/metas/tarefas', label: 'Tarefas', icon: ListChecks },
       ]
     : []

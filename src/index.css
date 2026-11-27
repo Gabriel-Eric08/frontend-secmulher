@@ -180,6 +180,30 @@
   --type-tint: 8%;
 }
 
+/* ------------------------------------------------------------------ Gráficos
+ * Cores validadas (scripts de daltonismo e contraste) contra a superfície de cada tema.
+ * Quadro/situação na ordem das colunas: a fazer, em andamento, com impedimento, concluído.
+ * "Concluído" tem a mesma cor em todos os gráficos; série única usa o roxo da marca.
+ */
+:root {
+  --chart-todo: #eda100;
+  --chart-doing: #7b4aa8;
+  --chart-blocked: #eb6834;
+  --chart-done: #1baf7a;
+  --chart-bar: #7b4aa8;
+  --chart-track: #ece3f5;
+  --chart-grid: #e4e1ea;
+}
+.dark {
+  --chart-todo: #c98500;
+  --chart-doing: #9d7bcb;
+  --chart-blocked: #d95926;
+  --chart-done: #199e70;
+  --chart-bar: #9d7bcb;
+  --chart-track: #2a1b3b;
+  --chart-grid: #2b2633;
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;

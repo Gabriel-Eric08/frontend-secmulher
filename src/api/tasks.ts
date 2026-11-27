@@ -219,6 +219,63 @@ export interface TaskSummary {
   idleDays: number
 }
 
+export interface TaskStatsFilters {
+  goalId?: UUID
+  responsibleUserId?: UUID
+  responsibleName?: string
+  mine?: boolean
+  priority?: TaskPriority[]
+  level?: TaskLevel
+  /** Semanas da série semanal (padrão 12, de 1 a 52) */
+  weeks?: number
+}
+
+export interface TaskResponsibleStats {
+  /** Nulo = tarefas sem responsável */
+  responsibleName: string | null
+  total: number
+  open: number
+  completed: number
+  blocked: number
+  overdue: number
+}
+
+export interface TaskGoalStats {
+  goal: GoalRef
+  total: number
+  open: number
+  completed: number
+  cancelled: number
+  overdue: number
+  percent: number | null
+}
+
+export interface TaskWeekStats {
+  /** Segunda-feira da semana */
+  weekStart: ISODate
+  created: number
+  completed: number
+}
+
+/** Dados agregados do recorte (tarefas e subtarefas). byPriority e byDeadline contam só as abertas. */
+export interface TaskStats {
+  total: number
+  open: number
+  pending: number
+  overdue: number
+  nearDue: number
+  idle: number
+  percent: number | null
+  byStatus: Record<TaskStatus, number>
+  byPriority: Record<TaskPriority, number>
+  byDeadline: Record<Exclude<TaskDeadlineStatus, 'CLOSED'>, number>
+  byResponsible: TaskResponsibleStats[]
+  byGoal: TaskGoalStats[]
+  weekly: TaskWeekStats[]
+  deadlineAlertDays: number
+  idleDays: number
+}
+
 export interface TaskOptions {
   goals: GoalRef[]
   responsibleUsers: TaskUserRef[]
@@ -327,6 +384,8 @@ export const tasksApi = {
     http.get<Task[]>('/tasks', { params: clean(filters), paramsSerializer: repeatArrays }).then(data),
   summary: (filters?: TaskSummaryFilters) =>
     http.get<TaskSummary>('/tasks/summary', { params: clean(filters) }).then(data),
+  stats: (filters?: TaskStatsFilters) =>
+    http.get<TaskStats>('/tasks/stats', { params: clean(filters), paramsSerializer: repeatArrays }).then(data),
   options: (goalId?: UUID) => http.get<TaskOptions>('/tasks/options', { params: clean({ goalId }) }).then(data),
   get: (id: UUID) => http.get<Task>(`/tasks/${id}`).then(data),
   timeline: (id: UUID) => http.get<TaskActivity[]>(`/tasks/${id}/timeline`).then(data),

@@ -11,6 +11,7 @@ import {
   type TaskRequest,
   type TaskResolvePendencyRequest,
   type TaskStartRequest,
+  type TaskStatsFilters,
   type TaskSummaryFilters,
   type UUID,
 } from '@/api'
@@ -45,6 +46,15 @@ export const useTaskSummary = (filters?: TaskSummaryFilters, enabled = true) =>
   useQuery({
     queryKey: qk.tasks.summary(filters),
     queryFn: () => tasksApi.summary(filters),
+    enabled,
+    placeholderData: keepPreviousData,
+  })
+
+/** Dados dos gráficos; mantém o gráfico anterior (esmaecido) enquanto um filtro novo carrega. */
+export const useTaskStats = (filters?: TaskStatsFilters, enabled = true) =>
+  useQuery({
+    queryKey: qk.tasks.stats(filters),
+    queryFn: () => tasksApi.stats(filters),
     enabled,
     placeholderData: keepPreviousData,
   })

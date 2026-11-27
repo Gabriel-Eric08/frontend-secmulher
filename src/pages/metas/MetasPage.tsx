@@ -1,17 +1,18 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
-import { CalendarClock, CalendarX2, Hourglass, ListChecks, ListTodo, Pause, Plus, Target, UserRound, X } from 'lucide-react'
+import { ListChecks, Plus, Target, UserRound, X } from 'lucide-react'
 import type { GoalFilters, GoalSort, TaskGoalStatus } from '@/api'
 import { useAuth } from '@/auth/AuthContext'
-import { useGoals, useTaskOptions, useTaskSummary } from '@/queries/tasks'
+import { useGoals, useTaskOptions } from '@/queries/tasks'
 import { GOAL_SORT_LABEL, GOAL_STATUS_LABEL, GOAL_STATUSES, idleLabel } from '@/lib/tasks'
 import { formatDate } from '@/lib/format'
-import { PageHeader } from '@/components/ui/Layout'
+import { PageHeader, Tabs } from '@/components/ui/Layout'
+import { MetasOverview } from './MetasOverview'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { SearchInput, Select, Switch } from '@/components/ui/Form'
 import { EmptyState, ErrorState, ForbiddenState } from '@/components/ui/States'
-import { LoadingBlock, Skeleton } from '@/components/ui/Spinner'
+import { LoadingBlock } from '@/components/ui/Spinner'
 import { DueBadge, GoalStatusBadge, ProgressBar } from '@/components/tasks/TaskUi'
 import { GoalFormModal } from '@/components/tasks/TaskModals'
 
@@ -68,24 +69,13 @@ export function MetasPage() {
   )
 
   const goals = useGoals(filters, access.canRead)
-  const summary = useTaskSummary(undefined, access.canRead)
-  const mySummary = useTaskSummary({ mine: true }, access.canRead)
+  const tab = params.get('aba') === 'metas' ? 'metas' : 'visao'
   const options = useTaskOptions(undefined, access.canRead)
 
   if (!access.canRead) return <ForbiddenState message="Seu perfil não tem acesso ao módulo de metas e tarefas." />
 
-  const s = summary.data
   const rows = goals.data ?? []
   const hasFilters = !!(status || all || mine || ownerUserId || debouncedQ || sort)
-
-  const cards: { to: string; label: string; value?: number; hint?: string; icon: ReactNode; tone?: 'warning' | 'danger' }[] = [
-    { to: '/metas/tarefas?minhas=1', label: 'Minhas tarefas abertas', value: mySummary.data?.open, icon: <UserRound className="size-5" /> },
-    { to: '/metas/tarefas', label: 'Tarefas abertas', value: s?.open, hint: s ? `${s.total} no total` : undefined, icon: <ListTodo className="size-5" /> },
-    { to: '/metas/tarefas?ver=pendentes', label: 'Com pendência', value: s?.pending, hint: s ? `${s.byStatus.BLOCKED ?? 0} com impedimento` : undefined, icon: <Hourglass className="size-5" />, tone: 'warning' },
-    { to: '/metas/tarefas?ver=prazo', label: 'Perto do prazo', value: s?.nearDue, hint: s ? `vence em até ${s.deadlineAlertDays} dias` : undefined, icon: <CalendarClock className="size-5" />, tone: 'warning' },
-    { to: '/metas/tarefas?ver=atrasadas', label: 'Atrasadas', value: s?.overdue, icon: <CalendarX2 className="size-5" />, tone: 'danger' },
-    { to: '/metas/tarefas?ver=paradas', label: 'Paradas', value: s?.idle, hint: s ? `sem atividade há ${s.idleDays}+ dias` : undefined, icon: <Pause className="size-5" />, tone: 'warning' },
-  ]
 
   return (
     <>
@@ -106,33 +96,20 @@ export function MetasPage() {
         }
       />
 
-      {/* Painel das tarefas: cada cartão abre a lista de tarefas já filtrada */}
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        {cards.map((c) => (
-          <Link key={c.label} to={c.to} className="card card-interactive flex flex-col items-start p-4 text-left">
-            <span
-              className={clsx(
-                'mb-2 rounded-lg p-2',
-                c.tone === 'danger' && (c.value ?? 0) > 0
-                  ? 'bg-red-50 text-red-600'
-                  : c.tone === 'warning' && (c.value ?? 0) > 0
-                    ? 'bg-amber-50 text-amber-700'
-                    : 'bg-brand-50 text-brand-700',
-              )}
-            >
-              {c.icon}
-            </span>
-            <span className="text-xs text-ink-500">{c.label}</span>
-            {c.value == null ? (
-              <Skeleton className="mt-1 h-7 w-10" />
-            ) : (
-              <span className="text-2xl font-semibold tracking-tight text-ink-900 tabular-nums">{c.value}</span>
-            )}
-            {c.hint && <span className="mt-0.5 text-[11px] text-ink-400">{c.hint}</span>}
-          </Link>
-        ))}
+      <div className="mb-5">
+        <Tabs<'visao' | 'metas'>
+          value={tab}
+          onChange={(v) => setParam('aba', v === 'metas' ? 'metas' : undefined)}
+          tabs={[
+            { value: 'visao', label: 'Visão geral' },
+            { value: 'metas', label: 'Metas' },
+          ]}
+        />
       </div>
 
+      {tab === 'visao' && <MetasOverview />}
+      {tab === 'metas' && (
+      <>
       {/* Filtros das metas */}
       <div className="card mb-4 p-3">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -245,6 +222,9 @@ export function MetasPage() {
             </Link>
           ))}
         </div>
+      )}
+
+      </>
       )}
 
       <GoalFormModal open={creating} onClose={() => setCreating(false)} onSaved={(g) => navigate(`/metas/${g.id}`)} />

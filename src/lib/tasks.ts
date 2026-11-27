@@ -61,6 +61,75 @@ export const TASK_STATUS_TONE: Record<TaskStatus, Tone> = {
 
 export const isTaskClosed = (s: TaskStatus) => s === 'COMPLETED' || s === 'CANCELLED'
 
+// ---------------------------------------------------------------- Quadro (kanban)
+
+/**
+ * Quatro colunas. "Com impedimento" junta tudo o que está travado: espera aberta (Aguardando),
+ * impedimento aberto e pausa; o cartão mostra qual é. Canceladas ficam fora do quadro.
+ */
+export type BoardColumn = 'todo' | 'doing' | 'blocked' | 'done'
+
+export const BOARD_COLUMNS: BoardColumn[] = ['todo', 'doing', 'blocked', 'done']
+
+export const BOARD_COLUMN_LABEL: Record<BoardColumn, string> = {
+  todo: 'A fazer',
+  doing: 'Em andamento',
+  blocked: 'Com impedimento',
+  done: 'Concluído',
+}
+
+export const BOARD_COLUMN_STATUSES: Record<BoardColumn, TaskStatus[]> = {
+  todo: ['TODO'],
+  doing: ['IN_PROGRESS'],
+  blocked: ['WAITING', 'BLOCKED', 'ON_HOLD'],
+  done: ['COMPLETED'],
+}
+
+/** Situações que aparecem no quadro (todas menos cancelada). */
+export const BOARD_STATUSES: TaskStatus[] = BOARD_COLUMNS.flatMap((c) => BOARD_COLUMN_STATUSES[c])
+
+export function boardColumnOf(status: TaskStatus): BoardColumn | null {
+  return BOARD_COLUMNS.find((c) => BOARD_COLUMN_STATUSES[c].includes(status)) ?? null
+}
+
+/**
+ * O que acontece ao levar um cartão de uma coluna para outra.
+ * - start: inicia; pendency: abre pendência (espera ou impedimento); complete: conclui;
+ * - unblock: tira da coluna de impedimento (retoma a pausa e/ou resolve as pendências);
+ * - reopen: reabre concluída (o backend decide a coluna: em andamento se já foi iniciada);
+ * - blocked: movimento que o sistema não permite (reason explica).
+ */
+export type BoardMove =
+  | { kind: 'start' }
+  | { kind: 'pendency' }
+  | { kind: 'complete' }
+  | { kind: 'unblock' }
+  | { kind: 'reopen' }
+  | { kind: 'blocked'; reason: string }
+  | { kind: 'none' }
+
+export function boardMove(task: Pick<Task, 'status' | 'startedAt'>, to: BoardColumn): BoardMove {
+  const from = boardColumnOf(task.status)
+  if (!from || from === to) return { kind: 'none' }
+  if (from === 'done') {
+    if (to === 'todo' && task.startedAt) {
+      return { kind: 'blocked', reason: 'A tarefa já foi iniciada: ao reabrir, ela volta para Em andamento.' }
+    }
+    return { kind: 'reopen' }
+  }
+  if (to === 'done') return { kind: 'complete' }
+  if (to === 'blocked') return { kind: 'pendency' }
+  if (from === 'blocked') {
+    if (to === 'todo' && task.startedAt) {
+      return { kind: 'blocked', reason: 'A tarefa já foi iniciada: sem o impedimento, ela volta para Em andamento.' }
+    }
+    return { kind: 'unblock' }
+  }
+  if (from === 'todo' && to === 'doing') return { kind: 'start' }
+  // doing -> todo
+  return { kind: 'blocked', reason: 'Uma tarefa iniciada não volta para A fazer.' }
+}
+
 // ---------------------------------------------------------------- Prioridade
 
 export const PRIORITIES: TaskPriority[] = ['URGENT', 'HIGH', 'MEDIUM', 'LOW']
